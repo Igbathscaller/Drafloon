@@ -1,0 +1,147 @@
+{
+    "ListOfSheets": {
+        "1393369260620906506": {
+            "spreadsheet": "ACORP Draft Testing",
+            "Rosters": {
+                "1": {
+                    "name": "P1",
+                    "players": [
+                        453301824355827725,
+                        199993616041639936
+                    ]
+                },
+                "2": {
+                    "name": "P2",
+                    "players": []
+                },
+                "3": {
+                    "name": "P3",
+                    "players": []
+                },
+                "4": {
+                    "name": "P4",
+                    "players": []
+                },
+                "5": {
+                    "name": "P5",
+                    "players": []
+                },
+                "6": {
+                    "name": "P6",
+                    "players": []
+                },
+                "7": {
+                    "name": "P7",
+                    "players": []
+                },
+                "8": {
+                    "name": "P8",
+                    "players": []
+                },
+                "9": {
+                    "name": "P9",
+                    "players": []
+                },
+                "10": {
+                    "name": "P10",
+                    "players": []
+                },
+                "11": {
+                    "name": "P11",
+                    "players": []
+                },
+                "12": {
+                    "name": "P12",
+                    "players": []
+                },
+                "13": {
+                    "name": "P13",
+                    "players": []
+                },
+                "14": {
+                    "name": "P14",
+                    "players": []
+                },
+                "15": {
+                    "name": "P15",
+                    "players": []
+                },
+                "16": {
+                    "name": "P16",
+                    "players": []
+                }
+            }
+        },
+        "1116459792672755713": {
+            "spreadsheet": "",
+            "Rosters": {
+                "1": {
+                    "name": "P1",
+                    "players": [
+                        453301824355827725
+                    ]
+                },
+                "2": {
+                    "name": "P2",
+                    "players": []
+                },
+                "3": {
+                    "name": "P3",
+                    "players": []
+                },
+                "4": {
+                    "name": "P4",
+                    "players": []
+                },
+                "5": {
+                    "name": "P5",
+                    "players": []
+                },
+                "6": {
+                    "name": "P6",
+                    "players": []
+                },
+                "7": {
+                    "name": "P7",
+                    "players": []
+                },
+                "8": {
+                    "name": "P8",
+                    "players": []
+                },
+                "9": {
+                    "name": "P9",
+                    "players": []
+                },
+                "10": {
+                    "name": "P10",
+                    "players": []
+                },
+                "11": {
+                    "name": "P11",
+                    "players": []
+                },
+                "12": {
+                    "name": "P12",
+                    "players": []
+                },
+                "13": {
+                    "name": "P13",
+                    "players": []
+                },
+                "14": {
+                    "name": "P14",
+                    "players": []
+                },
+                "15": {
+                    "name": "P15",
+                    "players": []
+                },
+                "16": {
+                    "name": "P16",
+                    "players": []
+                }
+            }
+        }
+    }
+}
