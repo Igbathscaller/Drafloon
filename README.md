@@ -5,9 +5,9 @@ Draft Automation Bot
 
 ## Plan
 ### Discord Bot (what information to store)
-- Link a trades channel with its corresponding spreadsheet
-- Command to link a user to a specific team/roster
-- Update when more things need to be stored
+- Link a trades channel with its corresponding spreadsheet (limit only to mods)
+- Command to link a user to a specific team/roster (limit only to mods)
+- *Update when more things need to be stored*
 - List of Pokemon
 
 ### Discord Bot (player commands and functionality)
