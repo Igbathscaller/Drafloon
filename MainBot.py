@@ -44,7 +44,7 @@ async def hello(interaction: discord.Interaction):
 def loadJson():
         # Try to load existing data
     try:
-        with open("spreadsheet_links.json", "r") as f:
+        with open("ChannelServer.json", "r") as f:
             data = json.load(f)
     except (FileNotFoundError,json.decoder.JSONDecodeError):
         data = {}
@@ -88,7 +88,7 @@ async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str
     data["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_name
     
     # Write to file
-    with open("spreadsheet_links.json", "w") as f:
+    with open("ChannelServer.json", "w") as f:
         json.dump(data, f, indent=4)
 
     await interaction.response.send_message(
@@ -143,7 +143,7 @@ async def setPlayerRoster(interaction: discord.Interaction, member: discord.Memb
 
     
     # Write to file
-    with open("spreadsheet_links.json", "w") as f:
+    with open("ChannelServer.json", "w") as f:
         json.dump(data, f, indent=4)
 
     await interaction.response.send_message(

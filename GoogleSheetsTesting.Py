@@ -1,5 +1,7 @@
 import gspread
+from gspread.utils import ValueRenderOption
 from google.oauth2.service_account import Credentials
+import json
 
 # Define scope
 scope = [
@@ -14,8 +16,19 @@ client = gspread.authorize(creds)
 
 # Open a sheet by name
 sheetName = "ACORP Draft Testing"
-sheet = client.open(sheetName).worksheet("Raw Stats")
+sheet = client.open(sheetName).worksheet("Sprite Gallery")
+doc = sheet.get("B3:D1199")
 
-# Read a cell
-value = sheet.cell(1, 2).value
-print(value)
+data = {}
+
+for pokemon in doc:
+    data[pokemon[0]]= pokemon[2]
+
+# data = {}
+# for each in doc:
+#     data["pokemon"] = doc
+
+with open("Pokemon.json", "w") as f:
+     json.dump(data, f, indent=4)
+
+
