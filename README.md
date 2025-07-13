@@ -9,6 +9,8 @@ Draft Automation Bot
 - Command to link a user to a specific team/roster (limit only to mods)
 - *Update when more things need to be stored*
 - List of Pokemon
+- Update the Json File and discord file to allow easier access to ids.
+- **Update the code so that it only reads the JSON file once, still update it on each write/update to the JSON variable**
 
 ### Discord Bot (player commands and functionality)
 - Add the ability to draft and leave picks
