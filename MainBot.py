@@ -1,12 +1,16 @@
 import os
 from dotenv import load_dotenv
 import json
-import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
-import ChannelServer
 import bisect
+
+import GoogleInteraction as ggSheet
+import ChannelServer
+
+
+
 
 # Import Neccessary Variables and Data
 load_dotenv()
@@ -50,9 +54,11 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-#First slash command 
+# First slash command 
 # Remove guild in the future
 # it is connected to specific server for faster testing
+
+# This is the testing command
 
 @client.tree.command(name="hello", description="Say hi to the bot!", guild=discord.Object(id=Test_Guild_Id))
 @commands.has_permissions(manage_messages=True)
@@ -64,8 +70,8 @@ async def hello(interaction: discord.Interaction):
 
     await interaction.response.send_message(f"Hello, {interaction.user.mention}!")
     
-# Testing Pokemon Choosing Command
 
+# Testing Pokemon Choosing Command
 # Autocomplete function
 async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
     if not current:
@@ -74,13 +80,13 @@ async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -
     current = current.lower()
     results = []
 
-    # Use bisect to find the first item that would be inserted to maintain order
-    idx = bisect.bisect_left(pokemon_names_lower, current)
+    # Use bisect to find the index of the first valid term
+    index = bisect.bisect_left(pokemon_names_lower, current)
 
     # Collect prefix matches from that point forward
-    while idx < len(pokemon_names_lower):
-        name_lower = pokemon_names_lower[idx]
-        name = pokemon_names[idx]
+    while index < len(pokemon_names_lower):
+        name_lower = pokemon_names_lower[index]
+        name = pokemon_names[index]
 
         if name_lower.startswith(current):
             results.append(name)
@@ -88,7 +94,7 @@ async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -
                 break
         else:
             break  # No more matches
-        idx += 1
+        index += 1
 
     # Optionally fill with `contains` matches if < 10
     if len(results) < 11:
@@ -113,14 +119,42 @@ async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -
 @app_commands.describe(pokemon="Start typing a name")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete)
 async def choose(interaction: discord.Interaction, pokemon: str):
+        
     image_url = pokemon_data.get(pokemon)
-
-    if image_url:
-        embed = discord.Embed(f"You chose {pokemon}!")
-        embed.set_thumbnail(url=image_url)
-        await interaction.response.send_message(embed=embed)
-    else:
+    try:
+        embed = discord.Embed(title = f"You chose {pokemon}!")
+        embed.set_image(url=image_url)
+        await interaction.response.send_message("", embed=embed)
+    except Exception as e:
         await interaction.response.send_message(f"You chose {pokemon}!")
+        print(f"Error drafting: {e}")
+
+# Starting the Drafting Process
+@client.tree.command(name="draft",description="draft a pokemon",guild=discord.Object(id=Test_Guild_Id))
+@app_commands.describe(team="Your Team Number", pokemon="Start typing a name")
+@app_commands.autocomplete(pokemon=pokemon_autocomplete)
+async def draft(interaction: discord.Interaction, pokemon: str, team: int):
+    
+    await interaction.response.defer(thinking=True)
+
+    nextSlot = ggSheet.getNextSlot(ggSheet.spreadSheet, team)
+
+    if nextSlot == -1:
+        await interaction.followup.send("No More Spots. You can't draft any more Pokemon!")
+        return
+
+    ggSheet.addPokemon( ggSheet.spreadSheet, team, nextSlot, pokemon)
+    
+    image_url = pokemon_data.get(pokemon)
+    try:
+        embed = discord.Embed(title = f"You drafted {pokemon}!")
+        embed.set_image(url=image_url)
+        await interaction.followup.send("", embed=embed)
+    except Exception as e:
+        await interaction.followup.send(f"You drafted {pokemon}!")
+        print(f"Error drafting: {e}")
+
+
 
 
 client.run(Token)
