@@ -4,13 +4,14 @@ import json
 import discord
 from discord.ext import commands
 
-import DraftCommands as Draft
 import ChannelServer
+import DraftCommands as Draft
+import GoogleInteraction as ggSheet
 
 
 # Import Neccessary Variables and Data
 load_dotenv()
-Test_Guild_Id = os.getenv("Test_Guild_Id")
+Guild_Id = os.getenv("Guild_Id")
 Token = os.getenv("Discord_Token")
 
 intents = discord.Intents.default()
@@ -21,11 +22,24 @@ intents.guilds = True
 client = commands.Bot(command_prefix="!", intents=intents)
 
 
+## Sets up the GG Sheets Interaction
+# Handles updating the spreadsheet for other modules
+def handle_spreadsheet_update(channel_id, sheet_key):
+    ggSheet.loadSheet(channel_id, sheet_key)
+    print(ggSheet.spreadDict)
+
+ChannelServer.register_spreadsheet_callback(handle_spreadsheet_update)
+
+# Loads Spreadsheets from channelData into GG Sheets Interaction
+for channel_id, info in ChannelServer.channelData["ListOfSheets"].items():
+        ggSheet.loadSheet(channel_id, info["spreadsheet"])
+
+
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
     try:
-        guild = discord.Object(id=Test_Guild_Id)
+        guild = discord.Object(id=Guild_Id)
     
         # Related to saving and storing player and sheet information in the roster.
         client.tree.add_command(ChannelServer.setspreadsheet, guild=guild)
@@ -52,21 +66,19 @@ async def close():
     await super(commands.Bot, client).close()
 
 
-# First slash command 
-# Remove guild in the future
-# it is connected to specific server for faster testing
+# You can remove guild to allow access to all servers the bot is on, but it takes longer to sync the bot
 
 # This is the testing command
 
-@client.tree.command(name="hello", description="Say hi to the bot!", guild=discord.Object(id=Test_Guild_Id))
-@commands.has_permissions(manage_messages=True)
-async def hello(interaction: discord.Interaction):
+# @client.tree.command(name="hello", description="Say hi to the bot!", guild=discord.Object(id=Guild_Id))
+# @commands.has_permissions(manage_messages=True)
+# async def hello(interaction: discord.Interaction):
 
-    if not interaction.user.guild_permissions.manage_messages:
-        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-        return
+#     if not interaction.user.guild_permissions.manage_messages:
+#         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+#         return
 
-    await interaction.response.send_message(f"Hello, {interaction.user.mention}!")
+#     await interaction.response.send_message(f"Hello, {interaction.user.mention}!")
 
 try:
     client.run(Token)

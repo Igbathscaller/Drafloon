@@ -12,10 +12,14 @@ scope = [
 creds = Credentials.from_service_account_file("../drafloon-959516a4b9be.json", scopes=scope)
 client = gspread.authorize(creds)
 
+# Initialize The Dictionary
+spreadDict = {}
 
-# Open a sheet by name
-sheetName = "ACORP Draft Testing"
-spreadSheet = client.open(sheetName)
+# Open the Spreadsheets by key
+def loadSheet(channelID, spreadsheetKey):
+    spreadDict[channelID] = client.open_by_key(spreadsheetKey)
+
+### Roster Access Functionality 
 
 def readRoster(spreadSheet: gspread.Spreadsheet, roster: int, row: int):
 
@@ -84,18 +88,26 @@ def getTeamInfo(spreadSheet: gspread.spreadsheet, roster: int):
 def addPokemon(spreadSheet: gspread.spreadsheet, roster: int, draftNum: int, pokemon:str):
     updateRoster(spreadSheet, roster+1, draftNum+3, pokemon)
 
-def addPokemon(spreadSheet: gspread.spreadsheet, roster: int, draftNum: int, pokemon:str):
-    updateRoster(spreadSheet, roster+1, draftNum+3, pokemon)
-
 def removePokemon(spreadSheet: gspread.spreadsheet, roster: int, draftNum: int):
     updateRoster(spreadSheet, roster+1, draftNum+3, "-")
 
-def getPokemon(spreadSheet: gspread.spreadsheet, roster: int, draftNum: int):
-    return readRoster(spreadSheet, roster, draftNum+4)
+def getPokemon(spreadSheet: gspread.spreadsheet, roster: int):
+    return list(map(lambda x: x.value, readRosterRange(spreadSheet, roster, range(5,16))))
 
 def getNextSlot(spreadSheet: gspread.spreadsheet, roster: int):
     rosterList = readRosterRange(spreadSheet, roster, range(4,16))
     for i in range(12):
-        if rosterList[i].value in ("-",None,""):
+        if rosterList[i].value in ("-","",None):
             return i
     return -1
+
+### Points Code Functionality
+
+# Create a Dictionary of ChannelId to SpreadSheet
+# First function should be to get a dictionary of pokemon to points.
+
+pointDict = {}
+
+# for key, value in pointDict[1].items():
+#     print(f"{key}: {value}")
+

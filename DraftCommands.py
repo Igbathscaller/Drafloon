@@ -1,8 +1,10 @@
-import bisect
-import discord
+from bisect import bisect_left
+import json
+from discord import Interaction,Embed
 from discord import app_commands
 import GoogleInteraction as ggSheet
-import json
+import ChannelServer
+
 
 # Import list of Pokemon
 with open("pokemon.json", "r") as f:
@@ -15,7 +17,7 @@ pokemon_names_lower = [name.lower() for name in pokemon_names]
 
 # Testing Pokemon Choosing Command
 # Autocomplete function
-async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
     if not current:
             return [app_commands.Choice(name=name, value=name) for name in ["Toxapex", "Ampharos"]]
 
@@ -23,7 +25,7 @@ async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -
     results = []
 
     # Use bisect to find the index of the first valid term
-    index = bisect.bisect_left(pokemon_names_lower, current)
+    index = bisect_left(pokemon_names_lower, current)
 
     # Pokemon Names that start with the current input
     while index < len(pokemon_names_lower):
@@ -57,11 +59,11 @@ async def pokemon_autocomplete(interaction: discord.Interaction, current: str) -
 @app_commands.describe(pokemon="Start typing a name")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete)
 @app_commands.guilds()
-async def choose(interaction: discord.Interaction, pokemon: str):
+async def choose(interaction: Interaction, pokemon: str):
         
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = discord.Embed(title = f"You chose {pokemon}!")
+        embed = Embed(title = f"You chose {pokemon}!")
         embed.set_image(url=image_url)
         await interaction.response.send_message("", embed=embed)
     except Exception as e:
@@ -70,24 +72,40 @@ async def choose(interaction: discord.Interaction, pokemon: str):
 
 # Starting the Drafting Process
 @app_commands.command(name="draft",description="draft a pokemon")
-@app_commands.describe(team="Your Team Number", pokemon="Start typing a name")
+@app_commands.describe(pokemon="Start typing a name")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete)
 @app_commands.guilds()
-async def draft(interaction: discord.Interaction, pokemon: str, team: int):
+async def draft(interaction: Interaction, pokemon: str):
+    
+    # Check For Errors before starting the draft process
+
+    spreadSheet = ggSheet.spreadDict.get(str(interaction.channel_id), None)
+
+    if not spreadSheet:
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+        return
+
+    team = ChannelServer.getTeam(str(interaction.channel_id), str(interaction.user.id))
+
+    if not team:
+        await interaction.response.send_message("You are not on a team", ephemeral=True)
+        return
     
     await interaction.response.defer(thinking=True)
+    
+    team = int(team)
 
-    nextSlot = ggSheet.getNextSlot(ggSheet.spreadSheet, team)
+    nextSlot = ggSheet.getNextSlot(spreadSheet, team)
 
     if nextSlot == -1:
         await interaction.followup.send("No More Spots. You can't draft any more Pokemon!")
         return
 
-    ggSheet.addPokemon( ggSheet.spreadSheet, team, nextSlot, pokemon)
+    ggSheet.addPokemon(spreadSheet, team, nextSlot, pokemon)
     
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = discord.Embed(title = f"You drafted {pokemon}!")
+        embed = Embed(title = f"You drafted {pokemon}!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
     except Exception as e:

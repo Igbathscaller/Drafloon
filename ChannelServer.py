@@ -1,8 +1,8 @@
 import json
 import asyncio
-import discord
+from discord import Interaction,Member
 from discord import app_commands
-from discord.ext import commands
+from re import search
 
 ### JSON Utility Functions
 
@@ -24,6 +24,12 @@ def loadJson():
 # Stores Json Data as a variables on runtime.
 channelData = loadJson()
 
+# Allows other modules to know when the Json has been updated
+spreadsheet_callback = None
+def register_spreadsheet_callback(callback):
+    global spreadsheet_callback
+    spreadsheet_callback = callback
+
 # Whenever you want to add a new channel to the variable you can.
 def initializeChannel(channel_id):
     channelData["ListOfSheets"][channel_id] = {
@@ -32,6 +38,20 @@ def initializeChannel(channel_id):
         "Players": {}
     }
 
+# Helper Function for Draft Commands
+def getTeam(channel_id: str, user_id: str):
+    channel = channelData["ListOfSheets"].get(channel_id, None)
+    if channel == None:
+        return None
+    return channel["Players"].get(user_id, None)
+
+def getSheet(channel_id: str):
+    channel = channelData["ListOfSheets"].get(channel_id, None)
+    if channel == None:
+        return None
+    return channel["spreadsheet"]
+
+
 
 ### Slash Commands for ChannelServer management
 
@@ -39,7 +59,7 @@ def initializeChannel(channel_id):
 # Needs Permission to use
 @app_commands.command(name="set_sheet", description="Connect Draft to a Sheet")
 @app_commands.guilds()
-async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str):
+async def setspreadsheet(interaction: Interaction, spreadsheet_url: str):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -47,19 +67,31 @@ async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
+    # Convert URL to SpreadSheet Key
+    match = search(r"/d/([a-zA-Z0-9-_]+)", spreadsheet_url)
+    if not match:
+        await interaction.response.send_message("Invalid Google Sheets URL provided.", ephemeral=True)
+        return
+    
+    spreadsheet_key = match.group(1)
+
     if channel_id not in channelData["ListOfSheets"]:
         initializeChannel(channel_id)
 
-    channelData["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_name
+    channelData["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_key
     with open("ChannelServer.json", "w") as f:
         json.dump(channelData, f, indent=4)
 
-    await interaction.response.send_message(f"Spreadsheet `{spreadsheet_name}` has been linked to #`{channel_name}`", ephemeral=True)
+    # Testing call back
+    if spreadsheet_callback:
+        spreadsheet_callback(channel_id, spreadsheet_key)
+
+    await interaction.response.send_message(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
 
 
 @app_commands.command(name="get_sheet", description="Get Sheet name")
 @app_commands.guilds()
-async def getspreadsheet(interaction: discord.Interaction):
+async def getspreadsheet(interaction: Interaction):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
@@ -75,7 +107,7 @@ async def getspreadsheet(interaction: discord.Interaction):
 
 @app_commands.command(name="add_player", description="Connect Discord User to a Roster")
 @app_commands.guilds()
-async def setPlayerRoster(interaction: discord.Interaction, member: discord.Member, roster: str):
+async def setPlayerRoster(interaction: Interaction, member: Member, roster: str):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -115,10 +147,13 @@ async def setPlayerRoster(interaction: discord.Interaction, member: discord.Memb
 
 # Config Funtion
 # Needs Permission to Run
+# Checks if Channel Exists
+# Check if player is on team
+# Removes player from team if on a team
 
 @app_commands.command(name="remove_player", description="Connect Discord User to a Roster")
 @app_commands.guilds()
-async def removePlayer(interaction: discord.Interaction, member: discord.Member):
+async def removePlayer(interaction: Interaction, member: Member):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -132,10 +167,10 @@ async def removePlayer(interaction: discord.Interaction, member: discord.Member)
 
     players = channelData["ListOfSheets"][channel_id]["Players"]
 
-    if user_id in players.keys():
-        roster = players[user_id]
-        del players[user_id]
-        channelData["ListOfSheets"][channel_id]["Rosters"][roster].remove(user_id)
+    if user_id in players.keys():   # Check if on a team
+        roster = players[user_id]   # Get the team
+        del players[user_id]        # Delete player from user id
+        channelData["ListOfSheets"][channel_id]["Rosters"][roster].remove(user_id) # Remove player from the team
         msg = f"Player {member.display_name} removed from Roster {roster}."
     else:
         msg = f"Player {member.display_name} is not on any Roster."
@@ -149,7 +184,7 @@ async def removePlayer(interaction: discord.Interaction, member: discord.Member)
 
 @app_commands.command(name="get_players", description="Get players in a roster")
 @app_commands.guilds()
-async def getPlayerRoster(interaction: discord.Interaction, roster: str):
+async def getPlayerRoster(interaction: Interaction, roster: str):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
@@ -169,6 +204,8 @@ async def getPlayerRoster(interaction: discord.Interaction, roster: str):
         msg = f"Player(s): {', '.join(display_names)} are on Roster {roster}"
 
     await interaction.response.send_message(msg, ephemeral=True)
+
+
 
 
 ### Code to Throw into Main Bot in case this ever goes wrong
