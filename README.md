@@ -22,4 +22,9 @@ Draft Automation Bot
 - Only needs access to the roster page
 - Possibly allow people to update their own logos and teamNames
 
+### Order of Modules to prevent Circular Imports
+- Mainbot (Highest Level, nothing imports this)
+- DraftCommands
+- GoogleInteraction
+- ChannelServer (Cannot import any modules)
 
