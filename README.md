@@ -23,8 +23,8 @@ Draft Automation Bot
 - Possibly allow people to update their own logos and teamNames
 
 ### Order of Modules to prevent Circular Imports
-- Mainbot (Highest Level, nothing imports this)
-- DraftCommands
-- GoogleInteraction
-- ChannelServer (Cannot import any modules)
+1. Mainbot (Highest Level, nothing imports this)
+2. DraftCommands
+3. GoogleInteraction
+4. ChannelServer (Cannot import any modules)
 
