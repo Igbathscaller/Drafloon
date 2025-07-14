@@ -10,8 +10,6 @@ import GoogleInteraction as ggSheet
 import ChannelServer
 
 
-
-
 # Import Neccessary Variables and Data
 load_dotenv()
 Test_Guild_Id = os.getenv("Test_Guild_Id")
@@ -45,7 +43,7 @@ async def on_ready():
         client.tree.add_command(ChannelServer.setspreadsheet, guild=guild)
         client.tree.add_command(ChannelServer.getspreadsheet, guild=guild)
         client.tree.add_command(ChannelServer.setPlayerRoster, guild=guild)
-        client.tree.add_command(ChannelServer.removePlayerRoster, guild=guild)
+        client.tree.add_command(ChannelServer.removePlayer, guild=guild)
         client.tree.add_command(ChannelServer.getPlayerRoster, guild=guild)
 
         synced = await client.tree.sync(guild=guild)

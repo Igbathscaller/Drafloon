@@ -13,22 +13,32 @@ def loadJson():
     except (FileNotFoundError, json.decoder.JSONDecodeError):
         data = {}
 
+
     if "ListOfSheets" not in data:
         data["ListOfSheets"] = {}
+        with open("ChannelServer.json", "w") as f:
+            json.dump(data, f, indent=4)
 
     return data
 
-def initializeChannel(data, channel_id):
-    rosters = {str(i): {"name": f"P{i}", "players": []} for i in range(1, 17)}
-    data["ListOfSheets"][channel_id] = {
+# Stores Json Data as a variables on runtime.
+channelData = loadJson()
+
+# Whenever you want to add a new channel to the variable you can.
+def initializeChannel(channel_id):
+    channelData["ListOfSheets"][channel_id] = {
         "spreadsheet": "",
-        "Rosters": rosters
+        "Rosters": {},
+        "Players": {}
     }
 
 
 ### Slash Commands for ChannelServer management
 
-@app_commands.command(name="link_sheet", description="Connect Draft to a Sheet")
+# Config Function
+# Needs Permission to use
+@app_commands.command(name="set_sheet", description="Connect Draft to a Sheet")
+@app_commands.guilds()
 async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
@@ -36,14 +46,13 @@ async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str
 
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
-    data = loadJson()
 
-    if channel_id not in data["ListOfSheets"]:
-        initializeChannel(data, channel_id)
+    if channel_id not in channelData["ListOfSheets"]:
+        initializeChannel(channel_id)
 
-    data["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_name
+    channelData["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_name
     with open("ChannelServer.json", "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(channelData, f, indent=4)
 
     await interaction.response.send_message(f"Spreadsheet `{spreadsheet_name}` has been linked to #`{channel_name}`", ephemeral=True)
 
@@ -53,15 +62,16 @@ async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str
 async def getspreadsheet(interaction: discord.Interaction):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
-    data = loadJson()
 
-    if channel_id not in data["ListOfSheets"]:
+    if channel_id not in channelData["ListOfSheets"]:
         msg = f"#`{channel_name}` has no linked spreadsheet"
     else:
-        msg = f"#`{channel_name}` is linked to {data['ListOfSheets'][channel_id]['spreadsheet']}"
+        msg = f"#`{channel_name}` is linked to {channelData['ListOfSheets'][channel_id]['spreadsheet']}"
 
     await interaction.response.send_message(msg, ephemeral=True)
 
+# Config Funtion
+# Needs Permission to Run
 
 @app_commands.command(name="add_player", description="Connect Discord User to a Roster")
 @app_commands.guilds()
@@ -71,47 +81,67 @@ async def setPlayerRoster(interaction: discord.Interaction, member: discord.Memb
         return
 
     channel_id = str(interaction.channel_id)
-    user_id = member.id
-    data = loadJson()
+    user_id = str(member.id)
 
-    if channel_id not in data["ListOfSheets"]:
-        initializeChannel(data, channel_id)
+    if channel_id not in channelData["ListOfSheets"]:
+        initializeChannel(channel_id)
 
-    players = data["ListOfSheets"][channel_id]["Rosters"][roster]["players"]
-    if user_id not in players:
-        players.append(user_id)
-        msg = f"Player {member.display_name} linked to Roster {roster}."
-    else:
+    if channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == roster:
+        # If it player is already the roster member
         msg = f"Player {member.display_name} is already in Roster {roster}."
+    
+    elif channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == None:
+        # if the player is not part of any roster
+        channelData["ListOfSheets"][channel_id]["Players"][user_id] = roster
+        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(roster, []).append(user_id)
+
+        msg = f"Player {member.display_name} linked to Roster {roster}."
+
+    else:
+        # if the player is part of another roster
+        oldRoster = channelData["ListOfSheets"][channel_id]["Players"][user_id]
+        channelData["ListOfSheets"][channel_id]["Players"][user_id] = roster
+        channelData["ListOfSheets"][channel_id]["Rosters"][oldRoster].remove(user_id)
+        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(roster, []).append(user_id)
+
+        msg = f"Player {member.display_name} moved from {oldRoster} to {roster}."
+
+
 
     with open("ChannelServer.json", "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(channelData, f, indent=4)
 
     await interaction.response.send_message(msg, ephemeral=True)
 
+# Config Funtion
+# Needs Permission to Run
+
 @app_commands.command(name="remove_player", description="Connect Discord User to a Roster")
 @app_commands.guilds()
-async def removePlayerRoster(interaction: discord.Interaction, member: discord.Member, roster: str):
+async def removePlayer(interaction: discord.Interaction, member: discord.Member):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
 
     channel_id = str(interaction.channel_id)
-    user_id = member.id
-    data = loadJson()
+    user_id = str(member.id)
 
-    if channel_id not in data["ListOfSheets"]:
-        initializeChannel(data, channel_id)
+    if channel_id not in channelData["ListOfSheets"]:
+        await interaction.response.send_message("Channel has not been initialized", ephemeral=True)
+        return
 
-    players = data["ListOfSheets"][channel_id]["Rosters"][roster]["players"]
-    if user_id in players:
-        players.remove(user_id)
+    players = channelData["ListOfSheets"][channel_id]["Players"]
+
+    if user_id in players.keys():
+        roster = players[user_id]
+        del players[user_id]
+        channelData["ListOfSheets"][channel_id]["Rosters"][roster].remove(user_id)
         msg = f"Player {member.display_name} removed from Roster {roster}."
     else:
-        msg = f"Player {member.display_name} is not in Roster {roster}."
+        msg = f"Player {member.display_name} is not on any Roster."
 
     with open("ChannelServer.json", "w") as f:
-        json.dump(data, f, indent=4)
+        json.dump(channelData, f, indent=4)
 
     await interaction.response.send_message(msg, ephemeral=True)
 
@@ -122,12 +152,15 @@ async def removePlayerRoster(interaction: discord.Interaction, member: discord.M
 async def getPlayerRoster(interaction: discord.Interaction, roster: str):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
-    data = loadJson()
 
-    if channel_id not in data["ListOfSheets"]:
+    if channel_id not in channelData["ListOfSheets"]:
         msg = f"#`{channel_name}` has no linked spreadsheet"
+    
+    elif channelData["ListOfSheets"][channel_id]["Rosters"].get(roster,[]) == []:
+        msg = f"Roster {roster} is empty"
+
     else:
-        ids = data["ListOfSheets"][channel_id]["Rosters"][roster]["players"]
+        ids = channelData["ListOfSheets"][channel_id]["Rosters"][roster]
         members = await asyncio.gather(*[
             interaction.guild.fetch_member(int(id))
             for id in ids
