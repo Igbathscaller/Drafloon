@@ -26,13 +26,15 @@ client = commands.Bot(command_prefix="!", intents=intents)
 # Handles updating the spreadsheet for other modules
 def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadSheet(channel_id, sheet_key)
-    print(ggSheet.spreadDict)
+    ggSheet.loadPoints(channel_id)
 
 ChannelServer.register_spreadsheet_callback(handle_spreadsheet_update)
 
 # Loads Spreadsheets from channelData into GG Sheets Interaction
 for channel_id, info in ChannelServer.channelData["ListOfSheets"].items():
         ggSheet.loadSheet(channel_id, info["spreadsheet"])
+        ggSheet.loadPoints(channel_id)
+
 
 
 @client.event

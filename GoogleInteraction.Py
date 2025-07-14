@@ -12,6 +12,10 @@ scope = [
 creds = Credentials.from_service_account_file("../drafloon-959516a4b9be.json", scopes=scope)
 client = gspread.authorize(creds)
 
+# What Sheets you need
+# Roster Code - to update the roster and read it
+# Draft Code - to get the number of points of each pokemon
+
 # Initialize The Dictionary
 spreadDict = {}
 
@@ -94,19 +98,42 @@ def removePokemon(spreadSheet: gspread.spreadsheet, roster: int, draftNum: int):
 def getPokemon(spreadSheet: gspread.spreadsheet, roster: int):
     return list(map(lambda x: x.value, readRosterRange(spreadSheet, roster, range(5,16))))
 
-def getNextSlot(spreadSheet: gspread.spreadsheet, roster: int):
+# Returns (index of next slot, point total)
+def getNextSlot(spreadSheet: gspread.spreadsheet, channel_id: str, roster: int):
     rosterList = readRosterRange(spreadSheet, roster, range(4,16))
+    pointTotal = 0
     for i in range(12):
         if rosterList[i].value in ("-","",None):
-            return i
-    return -1
+            return (i, pointTotal)
+        else:
+            pointTotal += pointDict[channel_id].get(rosterList[i].value, 0)
+    return (-1, pointTotal)
 
 ### Points Code Functionality
 
 # Create a Dictionary of ChannelId to SpreadSheet
 # First function should be to get a dictionary of pokemon to points.
 
+
 pointDict = {}
+
+# Open the Spreadsheets by key
+def loadPoints(channelID:str):
+    sheet = spreadDict[channelID].worksheet("Draft Code")
+    pokemon = sheet.col_values(2)[1:]   # pokemon
+    points  = sheet.col_values(4)[1:]    # points
+    
+    points = list(map(safe_int, points))
+
+    pointDict[channelID] = dict(zip(pokemon, points))
+    pointDict[channelID]["Total"] = safe_int(sheet.cell(1,6).value)
+
+def safe_int(value):
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
 
 # for key, value in pointDict[1].items():
 #     print(f"{key}: {value}")

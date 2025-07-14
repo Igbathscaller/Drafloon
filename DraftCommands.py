@@ -79,13 +79,15 @@ async def draft(interaction: Interaction, pokemon: str):
     
     # Check For Errors before starting the draft process
 
-    spreadSheet = ggSheet.spreadDict.get(str(interaction.channel_id), None)
+    channel_id = interaction.channel_id
+
+    spreadSheet = ggSheet.spreadDict.get(str(channel_id), None)
 
     if not spreadSheet:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
         return
 
-    team = ChannelServer.getTeam(str(interaction.channel_id), str(interaction.user.id))
+    team = ChannelServer.getTeam(str(channel_id), str(interaction.user.id))
 
     if not team:
         await interaction.response.send_message("You are not on a team", ephemeral=True)
@@ -95,7 +97,10 @@ async def draft(interaction: Interaction, pokemon: str):
     
     team = int(team)
 
-    nextSlot = ggSheet.getNextSlot(spreadSheet, team)
+    (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, str(channel_id), team)
+    
+    pointLimit = ggSheet.pointDict[str(channel_id)]["Total"]
+    pointLimit -= pointTotal + ggSheet.pointDict[str(channel_id)][pokemon]
 
     if nextSlot == -1:
         await interaction.followup.send("No More Spots. You can't draft any more Pokemon!")
@@ -105,11 +110,11 @@ async def draft(interaction: Interaction, pokemon: str):
     
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"You drafted {pokemon}!")
+        embed = Embed(title = f"You drafted {pokemon}. You have {pointLimit} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
     except Exception as e:
-        await interaction.followup.send(f"You drafted {pokemon}!")
+        await interaction.followup.send(f"You drafted {pokemon}. You have {pointLimit} points left!")
         print(f"Error drafting: {e}")
 
 
