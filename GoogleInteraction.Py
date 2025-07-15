@@ -43,6 +43,15 @@ def readRosterRange(spreadSheet: gspread.Spreadsheet, roster: int, rows: range):
 
     return(result)
 
+def readFullRoster(spreadSheet: gspread.Spreadsheet, rosters: int, pokemon: int):
+
+    rosterSheet = spreadSheet.worksheet("Roster Code")
+
+    result = rosterSheet.range(6, 2, 17, rosters)
+
+    return {cell.value for cell in result}
+
+
 
 #Roster Code is read-only, so I have to parse the formula to get the actual code.
 
@@ -72,7 +81,7 @@ def updateRoster(spreadSheet: gspread.Spreadsheet, cellCol: int, arrIndex: int, 
     # print(f"Updated {source_sheet_name}!{source_cell} to '{value}'")
 
 
-#All Usable Functions
+#Roster Functions
 
 def updateCoach(spreadSheet: gspread.spreadsheet, roster: int, name:str):
     updateRoster(spreadSheet, roster+1, 0, name)
@@ -100,11 +109,12 @@ def getPokemon(spreadSheet: gspread.spreadsheet, roster: int):
 
 # Returns (index of next slot, point total)
 def getNextSlot(spreadSheet: gspread.spreadsheet, channel_id: str, roster: int):
-    rosterList = readRosterRange(spreadSheet, roster, range(4,16))
+    rosterList = readRosterRange(spreadSheet, roster, range(5,16))
+    
     pointTotal = 0
-    for i in range(12):
+    for i in range(11):
         if rosterList[i].value in ("-","",None):
-            return (i, pointTotal)
+            return (i+1, pointTotal)
         else:
             pointTotal += pointDict[channel_id].get(rosterList[i].value, 0)
     return (-1, pointTotal)
@@ -114,7 +124,7 @@ def getNextSlot(spreadSheet: gspread.spreadsheet, channel_id: str, roster: int):
 # Create a Dictionary of ChannelId to SpreadSheet
 # First function should be to get a dictionary of pokemon to points.
 
-
+# Initialize Pokemon Points
 pointDict = {}
 
 # Open the Spreadsheets by key
@@ -134,7 +144,4 @@ def safe_int(value):
     except ValueError:
         return 0
 
-
-# for key, value in pointDict[1].items():
-#     print(f"{key}: {value}")
-
+# Get list of all pokemon that are drafted

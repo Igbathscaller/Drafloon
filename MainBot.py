@@ -36,7 +36,6 @@ for channel_id, info in ChannelServer.channelData["ListOfSheets"].items():
         ggSheet.loadPoints(channel_id)
 
 
-
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")

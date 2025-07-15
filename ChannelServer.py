@@ -31,9 +31,12 @@ def register_spreadsheet_callback(callback):
     spreadsheet_callback = callback
 
 # Whenever you want to add a new channel to the variable you can.
-def initializeChannel(channel_id):
+def initializeChannel(channel_id, playerCount):
     channelData["ListOfSheets"][channel_id] = {
         "spreadsheet": "",
+        "Player Count": playerCount,
+        "Turn": 0,
+        "Skipped Players": [],
         "Rosters": {},
         "Players": {}
     }
@@ -59,7 +62,8 @@ def getSheet(channel_id: str):
 # Needs Permission to use
 @app_commands.command(name="set_sheet", description="Connect Draft to a Sheet")
 @app_commands.guilds()
-async def setspreadsheet(interaction: Interaction, spreadsheet_url: str):
+@app_commands.describe(spreadsheet_url= "spreadsheet URL", player_count="number of players, defaults to 16")
+async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_count: int = None):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -75,8 +79,11 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str):
     
     spreadsheet_key = match.group(1)
 
+    if not player_count:
+        player_count = 16
+
     if channel_id not in channelData["ListOfSheets"]:
-        initializeChannel(channel_id)
+        initializeChannel(channel_id, player_count)
 
     channelData["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_key
     with open("ChannelServer.json", "w") as f:
@@ -208,159 +215,3 @@ async def getPlayerRoster(interaction: Interaction, roster: str):
 
 
 
-### Code to Throw into Main Bot in case this ever goes wrong
-# ### Function for loading in existing data
-# def loadJson():
-#         # Try to load existing data
-#     try:
-#         with open("ChannelServer.json", "r") as f:
-#             data = json.load(f)
-#     except (FileNotFoundError,json.decoder.JSONDecodeError):
-#         data = {}
-
-#     # Create ListOfSheets if it doesn't exist
-#     if "ListOfSheets" not in data:
-#         data["ListOfSheets"] = {}
-
-#     return data
-
-# def initializeChannel(data, channel_id):
-#         rosters = {}
-#         for i in range(1, 17):
-#             rosters[str(i)] = {
-#                 "name": f"P{i}",
-#                 "players": []
-#             }
-
-#         data["ListOfSheets"][channel_id] = {
-#             "spreadsheet": "",
-#             "Rosters": rosters
-#         }
-
-
-
-# ### Command for linking a sheet to a channel
-
-# @client.tree.command(name="sheet", description="Connect Draft to a Sheet", guild=discord.Object(id=Test_Guild_Id))
-# @commands.has_permissions(manage_messages=True)
-# async def setspreadsheet(interaction: discord.Interaction, spreadsheet_name: str):
-
-#     # Stop No Permission Scrubs
-
-#     if not interaction.user.guild_permissions.manage_messages:
-#         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-#         return
-
-
-#     channel_id = str(interaction.channel_id)
-#     channel_name = str(interaction.channel)
-
-#     # Load existing data
-#     data = loadJson()
-
-#     # Initialize the channel if it doesn't exist.
-#     if channel_id not in data["ListOfSheets"]:
-#         initializeChannel(data,channel_id)
-
-#     # Set the SpreadSheet Name
-#     data["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_name
-    
-#     # Write to file
-#     with open("ChannelServer.json", "w") as f:
-#         json.dump(data, f, indent=4)
-
-#     await interaction.response.send_message(
-#         f"Spreadsheet `{spreadsheet_name}` has been linked to #`{channel_name}`",ephemeral=True
-#     )
-
-# ### Getting the Sheet name 
-
-# @client.tree.command(name="get_sheet", description="Get Sheet name", guild=discord.Object(id=Test_Guild_Id))
-# async def setspreadsheet(interaction: discord.Interaction):
-#     channel_id = str(interaction.channel_id)
-#     channel_name = str(interaction.channel)
-#     msg = ""
-
-#     # Load data
-#     data = loadJson()
-
-#     # Initialize the channel if it doesn't exist.
-#     if channel_id not in data["ListOfSheets"]:
-#         msg = f"#`{channel_name}` has no linked spreadsheet"
-#     else:
-#         msg = f"#`{channel_name}` is linked to {data["ListOfSheets"][channel_id]["spreadsheet"]}"
-    
-#     await interaction.response.send_message(
-#         msg, ephemeral=True
-#     )
-
-# ### Sheet for linking a player to a specific roster
-
-# @client.tree.command(name="player", description="Connect Discord User to a Roster", guild=discord.Object(id=Test_Guild_Id))
-# @commands.has_permissions(manage_messages=True)
-# async def setPlayerRoster(interaction: discord.Interaction, member: discord.Member, roster: str):
-    
-#     # Stop No Permission Scrubs
-#     if not interaction.user.guild_permissions.manage_messages:
-#         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-#         return
-
-    
-#     channel_id = str(interaction.channel_id)
-#     user_id = member.id
-
-#     # Load existing data
-#     data = loadJson()
-
-#     # Initialize the channel if it doesn't exist.
-#     if channel_id not in data["ListOfSheets"]:
-#         initializeChannel(data,channel_id)
-
-#     # add player if new
-#     players = data["ListOfSheets"][channel_id]["Rosters"][roster]["players"]
-#     msg = ""
-#     if user_id not in players:
-#         players.append(user_id)
-#         msg = f"Player {member.display_name} linked to Roster {roster}."
-#     else:
-#         msg = f"Player {member.display_name} is already in Roster {roster}."
-#     print(msg)
-
-    
-#     # Write to file
-#     with open("ChannelServer.json", "w") as f:
-#         json.dump(data, f, indent=4)
-
-#     await interaction.response.send_message(
-#         msg,ephemeral=True
-#     )
-
-# ###Getting Players from a specific roster
-
-# @client.tree.command(name="get_player", description="Get Sheet name", guild=discord.Object(id=Test_Guild_Id))
-# async def setspreadsheet(interaction: discord.Interaction, roster: str):
-#     channel_id = str(interaction.channel_id)
-#     channel_name = str(interaction.channel)
-#     msg = ""
-
-#     # Load data
-#     data = loadJson()
-
-#     # Initialize the channel if it doesn't exist.
-#     if channel_id not in data["ListOfSheets"]:
-#         msg = f"#`{channel_name}` has no linked spreadsheet"
-#     else:
-#         ids = data["ListOfSheets"][channel_id]["Rosters"][roster]["players"]
-
-#         members = await asyncio.gather(*[
-#             interaction.guild.fetch_member(int(id))
-#             for id in ids
-#         ])
-
-#         display_names = [member.display_name for member in members]
-
-#         msg = f"Player(s): {", ".join(display_names)} are on Roster {roster}"
-
-#     await interaction.response.send_message(
-#         msg, ephemeral=True
-#     )
