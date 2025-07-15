@@ -1,24 +1,17 @@
 {
-    "ListOfSheets": {
-        "1393369260620906506": {
-            "spreadsheet": "1GMJELKMakvgJwIjnmydQksq4pCx7al04CF3HiL777Io",
-            "Player Count": 2,
-            "Turn": 4,
-            "Skipped": [],
-            "Rosters": {
-                "1": [
-                    "453301824355827725"
-                ],
-                "2": [
-                    "199993616041639936",
-                    "373308967377698826"
-                ]
-            },
-            "Players": {
-                "453301824355827725": "1",
-                "199993616041639936": "2",
-                "373308967377698826": "2"
-            }
+    "1393369260620906506": {
+        "spreadsheet": "1GMJELKMakvgJwIjnmydQksq4pCx7al04CF3HiL777Io",
+        "Player Count": 1,
+        "Turn": 1,
+        "Skipped": [],
+        "Rosters": {
+            "1": [
+                "453301824355827725"
+            ],
+            "2": []
+        },
+        "Players": {
+            "453301824355827725": "1"
         }
     }
 }

@@ -13,11 +13,10 @@ def loadJson():
     except (FileNotFoundError, json.decoder.JSONDecodeError):
         data = {}
 
-
-    if "ListOfSheets" not in data:
-        data["ListOfSheets"] = {}
-        with open("ChannelServer.json", "w") as f:
-            json.dump(data, f, indent=4)
+    # if "ListOfSheets" not in data:
+    #     data["ListOfSheets"] = {}
+    #     with open("ChannelServer.json", "w") as f:
+    #         json.dump(data, f, indent=4)
 
     return data
 
@@ -32,7 +31,7 @@ def register_spreadsheet_callback(callback):
 
 # Whenever you want to add a new channel to the variable you can.
 def initializeChannel(channel_id, playerCount):
-    channelData["ListOfSheets"][channel_id] = {
+    channelData[channel_id] = {
         "spreadsheet": "",
         "Player Count": playerCount,
         "Turn": 0,
@@ -43,13 +42,13 @@ def initializeChannel(channel_id, playerCount):
 
 # Helper Function for Draft Commands
 def getTeam(channel_id: str, user_id: str):
-    channel = channelData["ListOfSheets"].get(channel_id, None)
+    channel = channelData.get(channel_id, None)
     if channel == None:
         return None
     return channel["Players"].get(user_id, None)
 
 def getSheet(channel_id: str):
-    channel = channelData["ListOfSheets"].get(channel_id, None)
+    channel = channelData.get(channel_id, None)
     if channel == None:
         return None
     return channel["spreadsheet"]
@@ -79,10 +78,10 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
     
     spreadsheet_key = match.group(1)
 
-    if channel_id not in channelData["ListOfSheets"]:
+    if channel_id not in channelData:
         initializeChannel(channel_id, player_count)
 
-    channelData["ListOfSheets"][channel_id]["spreadsheet"] = spreadsheet_key
+    channelData[channel_id]["spreadsheet"] = spreadsheet_key
     with open("ChannelServer.json", "w") as f:
         json.dump(channelData, f, indent=4)
 
@@ -99,10 +98,10 @@ async def getspreadsheet(interaction: Interaction):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
-    if channel_id not in channelData["ListOfSheets"]:
+    if channel_id not in channelData:
         msg = f"#`{channel_name}` has no linked spreadsheet"
     else:
-        msg = f"#`{channel_name}` is linked to {channelData['ListOfSheets'][channel_id]['spreadsheet']}"
+        msg = f"#`{channel_name}` is linked to `{channelData[channel_id]['spreadsheet']}`"
 
     await interaction.response.send_message(msg, ephemeral=True)
 
@@ -119,26 +118,26 @@ async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
     channel_id = str(interaction.channel_id)
     user_id = str(member.id)
 
-    if channel_id not in channelData["ListOfSheets"]:
+    if channel_id not in channelData:
         initializeChannel(channel_id)
 
-    if channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == team:
+    if channelData[channel_id]["Players"].get(user_id, None) == team:
         # If it player is already the roster member
         msg = f"Player {member.display_name} is already in Roster {team}."
     
-    elif channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == None:
+    elif channelData[channel_id]["Players"].get(user_id, None) == None:
         # if the player is not part of any roster
-        channelData["ListOfSheets"][channel_id]["Players"][user_id] = team
-        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(team, []).append(user_id)
+        channelData[channel_id]["Players"][user_id] = team
+        channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
         msg = f"Player {member.display_name} linked to Roster {team}."
 
     else:
         # if the player is part of another roster
-        oldTeam = channelData["ListOfSheets"][channel_id]["Players"][user_id]
-        channelData["ListOfSheets"][channel_id]["Players"][user_id] = team
-        channelData["ListOfSheets"][channel_id]["Rosters"][oldTeam].remove(user_id)
-        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(team, []).append(user_id)
+        oldTeam = channelData[channel_id]["Players"][user_id]
+        channelData[channel_id]["Players"][user_id] = team
+        channelData[channel_id]["Rosters"][oldTeam].remove(user_id)
+        channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
         msg = f"Player {member.display_name} moved from Team {oldTeam} to Team {team}."
 
@@ -165,16 +164,16 @@ async def removePlayer(interaction: Interaction, member: Member):
     channel_id = str(interaction.channel_id)
     user_id = str(member.id)
 
-    if channel_id not in channelData["ListOfSheets"]:
+    if channel_id not in channelData:
         await interaction.response.send_message("Channel has not been initialized", ephemeral=True)
         return
 
-    players = channelData["ListOfSheets"][channel_id]["Players"]
+    players = channelData[channel_id]["Players"]
 
     if user_id in players.keys():   # Check if on a team
         roster = players[user_id]   # Get the team
         del players[user_id]        # Delete player from user id
-        channelData["ListOfSheets"][channel_id]["Rosters"][roster].remove(user_id) # Remove player from the team
+        channelData[channel_id]["Rosters"][roster].remove(user_id) # Remove player from the team
         msg = f"Player {member.display_name} removed from Roster {roster}."
     else:
         msg = f"Player {member.display_name} is not on any Roster."
@@ -192,14 +191,14 @@ async def getPlayerRoster(interaction: Interaction, roster: str):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
-    if channel_id not in channelData["ListOfSheets"]:
+    if channel_id not in channelData:
         msg = f"#`{channel_name}` has no linked spreadsheet"
     
-    elif channelData["ListOfSheets"][channel_id]["Rosters"].get(roster,[]) == []:
+    elif channelData[channel_id]["Rosters"].get(roster,[]) == []:
         msg = f"Roster {roster} is empty"
 
     else:
-        ids = channelData["ListOfSheets"][channel_id]["Rosters"][roster]
+        ids = channelData[channel_id]["Rosters"][roster]
         members = await asyncio.gather(*[
             interaction.guild.fetch_member(int(id))
             for id in ids

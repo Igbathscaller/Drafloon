@@ -73,7 +73,7 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
 # Check whose turn it is
 def getTurn(channel_id: str):
-    channel = ChannelServer.channelData["ListOfSheets"].get(channel_id, None)
+    channel = ChannelServer.channelData.get(channel_id, None)
 
     turn = channel["Turn"]
     playerCount = channel["Player Count"]
@@ -125,7 +125,7 @@ async def draft(interaction: Interaction, pokemon: str):
     # Check if allowed to draft
     team = int(team)
     (round, turn) = getTurn(channel_id)
-    channel = ChannelServer.channelData["ListOfSheets"].get(channel_id, None)
+    channel = ChannelServer.channelData.get(channel_id, None)
     
     # if it is your turn, you can draft
     if team != turn:
