@@ -2,6 +2,7 @@ from bisect import bisect_left
 import json
 from discord import Interaction,Embed
 from discord import app_commands
+import asyncio
 import GoogleInteraction as ggSheet
 import ChannelServer
 
@@ -54,23 +55,6 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
     return [app_commands.Choice(name=name, value=name) for name in results]
 
-# Testing Function No Longer Needed
-# @app_commands.command(name="choose",description="Choose a Pokémon")
-# @app_commands.describe(pokemon="Start typing a name")
-# @app_commands.autocomplete(pokemon=pokemon_autocomplete)
-# @app_commands.guilds()
-# async def choose(interaction: Interaction, pokemon: str):
-        
-#     image_url = pokemon_data.get(pokemon)
-#     try:
-#         embed = Embed(title = f"You chose {pokemon}!")
-#         embed.set_image(url=image_url)
-#         await interaction.response.send_message("", embed=embed)
-#     except Exception as e:
-#         await interaction.response.send_message(f"You chose {pokemon}!")
-#         print(f"Error drafting: {e}")
-
-
 # Check whose turn it is
 def getTurn(channel_id: str):
     channel = ChannelServer.channelData.get(channel_id, None)
@@ -87,6 +71,27 @@ def getTurn(channel_id: str):
     # On the even turns. 
     else:
         return (round, turn % playerCount + 1)
+
+# Skip Helper Function.
+def skip(channel_id: str):
+    channel = ChannelServer.channelData.get(channel_id, None)
+    # if the channel is not valid
+    if not channel:
+        return None
+    else:
+        team = getTurn(channel_id)[1]
+        channel["Skipped"].append(team)
+        channel["Turn"]+=1
+        ChannelServer.saveJson()
+        return team
+    
+# Manually end timer
+def end_timer(channel_id: str, team: str):
+    key = (channel_id, team)
+    if key in timers:
+        timers[key].cancel()
+        del timers[key]
+
 
 # Starting the Drafting Process
 # We need to check that the channel has a sheet associated
@@ -170,6 +175,7 @@ async def draft(interaction: Interaction, pokemon: str):
 
     ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
     channel["Turn"] += 1
+    ChannelServer.saveJson()
     
     image_url = pokemon_data.get(pokemon)
     try:
@@ -179,4 +185,79 @@ async def draft(interaction: Interaction, pokemon: str):
     except Exception as e:
         await interaction.followup.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         print(f"Error drafting: {e}")
+    # Start Timer at the end of each action
+    await start_timer(interaction)
 
+# Timer and Automatic Skipping
+
+timers = {}
+
+async def start_timer(interaction: Interaction, timeout = 10):
+    
+    channel_id = str(interaction.channel_id)
+    
+    team = getTurn(channel_id)[1]
+    # End Previous Timer in the Channel 
+    key = (channel_id, team)
+    if key in timers:
+        timers[key].cancel()
+    # Define a timer 
+    async def timer():
+        try:
+            await asyncio.sleep(timeout)
+            await auto_skip(interaction)
+        except asyncio.CancelledError:
+        # Ignore cancelled timer
+            pass
+        except Exception as e:
+            print(f"Timer Error: {e}")
+    # Start the timer
+    timers[key] = asyncio.create_task(timer())
+
+# Manual Skip
+@app_commands.command(name="skip",description="Skip the Current Player (mod)")
+@app_commands.guilds()
+async def skip_player(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+    
+    channel_id = str(interaction.channel_id)
+    team = str(skip(channel_id))
+
+    if not team:
+        await interaction.response.send_message(f"This Channel has no associated sheet")
+    else:
+        skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"][team]
+        mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+        await interaction.channel.send(f"Team {team}: {mentions} Skipped.")
+        # Start Timer at the end of each action. Only activate timer if we know it'll work.
+        await start_timer(interaction)
+
+
+
+# Automatically Skip
+async def auto_skip(interaction: Interaction):
+    
+    channel_id = str(interaction.channel_id)
+    team = str(skip(channel_id))
+
+    skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"][team]
+    mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+
+    await interaction.channel.send(f"Team {team}: {mentions} Skipped. Faster Next Time Stupid")
+    await start_timer(interaction)
+
+@app_commands.command(name="stop_timer",description="Skip the Current Player (mod)")
+@app_commands.guilds()
+async def stop_timer(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+    
+    channel_id = str(interaction.channel_id)
+    team = getTurn(channel_id)[1]
+
+    end_timer(channel_id, team)
+
+    await interaction.response.send_message("Timer has been stopped.")

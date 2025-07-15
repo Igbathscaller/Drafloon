@@ -13,15 +13,16 @@ def loadJson():
     except (FileNotFoundError, json.decoder.JSONDecodeError):
         data = {}
 
-    # if "ListOfSheets" not in data:
-    #     data["ListOfSheets"] = {}
-    #     with open("ChannelServer.json", "w") as f:
-    #         json.dump(data, f, indent=4)
-
     return data
 
 # Stores Json Data as a variables on runtime.
 channelData = loadJson()
+
+# Save ChannelData to Json
+def saveJson():
+    with open("ChannelServer.json", "w") as f:
+        json.dump(channelData, f, indent=4)
+
 
 # Allows other modules to know when the Json has been updated
 spreadsheet_callback = None
@@ -82,8 +83,7 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
         initializeChannel(channel_id, player_count)
 
     channelData[channel_id]["spreadsheet"] = spreadsheet_key
-    with open("ChannelServer.json", "w") as f:
-        json.dump(channelData, f, indent=4)
+    saveJson()
 
     # Testing call back
     if spreadsheet_callback:
@@ -141,10 +141,7 @@ async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
 
         msg = f"Player {member.display_name} moved from Team {oldTeam} to Team {team}."
 
-
-
-    with open("ChannelServer.json", "w") as f:
-        json.dump(channelData, f, indent=4)
+    saveJson()
 
     await interaction.response.send_message(msg, ephemeral=True)
 
@@ -178,8 +175,7 @@ async def removePlayer(interaction: Interaction, member: Member):
     else:
         msg = f"Player {member.display_name} is not on any Roster."
 
-    with open("ChannelServer.json", "w") as f:
-        json.dump(channelData, f, indent=4)
+    saveJson()
 
     await interaction.response.send_message(msg, ephemeral=True)
 
