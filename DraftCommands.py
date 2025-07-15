@@ -132,6 +132,7 @@ async def draft(interaction: Interaction, pokemon: str):
         #  if you have a skip, use skipped turn to draft
         if team in channel["Skipped"]:
             channel["Skipped"].remove(team)
+            turn -= 1
         else:
             await interaction.response.send_message(f"It's not your turn! It's Team {turn}'s turn.")
             return
@@ -160,14 +161,14 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.followup.send(f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
         return
     # Check if someone else drafted the mon
-    drafted = ggSheet.readFullRoster(spreadSheet,16,11)
+    drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
     if pokemon in drafted:
         await interaction.followup.send(f"Someone already drafted {pokemon}.")
         return
 
     pointsLeft -= pickCost
 
-    ggSheet.addPokemon(spreadSheet, team, nextSlot, pokemon)
+    ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
     channel["Turn"] += 1
     
     image_url = pokemon_data.get(pokemon)

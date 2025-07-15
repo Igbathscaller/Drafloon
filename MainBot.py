@@ -27,6 +27,7 @@ client = commands.Bot(command_prefix="!", intents=intents)
 def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadSheet(channel_id, sheet_key)
     ggSheet.loadPoints(channel_id)
+    ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
 
 ChannelServer.register_spreadsheet_callback(handle_spreadsheet_update)
 
@@ -34,6 +35,7 @@ ChannelServer.register_spreadsheet_callback(handle_spreadsheet_update)
 for channel_id, info in ChannelServer.channelData.items():
         ggSheet.loadSheet(channel_id, info["spreadsheet"])
         ggSheet.loadPoints(channel_id)
+        ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
 
 
 @client.event
@@ -58,32 +60,18 @@ async def on_ready():
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
-@client.event
-async def close():
-    print("Bot is shutting down... Saving JSON data.")
-    with open("ChannelServer.json", "w") as f:
-        json.dump(ChannelServer.channelData, f, indent=4)
-    await super(commands.Bot, client).close()
-
-
-# You can remove guild to allow access to all servers the bot is on, but it takes longer to sync the bot
-
-# This is the testing command
-
-# @client.tree.command(name="hello", description="Say hi to the bot!", guild=discord.Object(id=Guild_Id))
-# @commands.has_permissions(manage_messages=True)
-# async def hello(interaction: discord.Interaction):
-
-#     if not interaction.user.guild_permissions.manage_messages:
-#         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-#         return
-
-#     await interaction.response.send_message(f"Hello, {interaction.user.mention}!")
+# @client.event
+# async def close():
+#     print("Bot is shutting down... Saving JSON data.")
+#     with open("ChannelServer.json", "w") as f:
+#         json.dump(ChannelServer.channelData, f, indent=4)
+#     await super(commands.Bot, client).close()
 
 try:
     client.run(Token)
 finally:
-    print("Saving data before shutdown...")
-    with open("ChannelServer.json", "w") as f:
-        json.dump(ChannelServer.channelData, f, indent=4)
+    print("Shutting Down...")
+    # print("Saving data before shutdown...")
+    # with open("ChannelServer.json", "w") as f:
+    #     json.dump(ChannelServer.channelData, f, indent=4)
 

@@ -240,3 +240,48 @@
 #     await interaction.response.send_message(
 #         msg, ephemeral=True
 #     )
+
+# You can remove guild to allow access to all servers the bot is on, but it takes longer to sync the bot
+
+# This is the testing command
+
+# @client.tree.command(name="hello", description="Say hi to the bot!", guild=discord.Object(id=Guild_Id))
+# @commands.has_permissions(manage_messages=True)
+# async def hello(interaction: discord.Interaction):
+
+#     if not interaction.user.guild_permissions.manage_messages:
+#         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+#         return
+
+#     await interaction.response.send_message(f"Hello, {interaction.user.mention}!")
+
+
+# Roster Code is read-only, so I have to parse the formula to get the actual code.
+# I should probably make it so that the regex search and cell checking only happens at startup
+# This why I can reduce a google sheets interaction by one when reading.
+
+# def updateRoster(spreadSheet: gspread.Spreadsheet, cellCol: int, arrIndex: int, value:str):
+
+#     rosterSheet = spreadSheet.worksheet("Roster Code")
+
+#     # Get the formula string from the formula cell
+#     formula = rosterSheet.cell(2, cellCol, value_render_option="FORMULA").value
+
+#     # Regex to extract 'SheetName!ColumnStartRow:ColumnEndRow'
+#     match = re.search(r'([a-zA-Z0-9_]+)!\$?([A-Z]+)(\d+):\$?[A-Z]+(\d+)', formula)
+#     if not match:
+#         print("Could not parse: " + formula)
+
+#     source_sheet_name, column_letter, start_row, end_row = match.groups()
+#     start_row, end_row = int(start_row), int(end_row)
+
+#     # Final source cell to update
+#     source_row = start_row + arrIndex
+#     source_cell = f"{column_letter}{source_row}"
+
+#     # Open the correct worksheet and update the cell
+#     source_sheet = spreadSheet.worksheet(source_sheet_name)
+#     source_sheet.update_acell(source_cell, value)
+
+#     # print(f"Updated {source_sheet_name}!{source_cell} to '{value}'")
+
