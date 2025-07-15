@@ -54,21 +54,39 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
     return [app_commands.Choice(name=name, value=name) for name in results]
 
-# Slash command with autocomplete
-@app_commands.command(name="choose",description="Choose a Pokémon")
-@app_commands.describe(pokemon="Start typing a name")
-@app_commands.autocomplete(pokemon=pokemon_autocomplete)
-@app_commands.guilds()
-async def choose(interaction: Interaction, pokemon: str):
+# Testing Function No Longer Needed
+# @app_commands.command(name="choose",description="Choose a Pokémon")
+# @app_commands.describe(pokemon="Start typing a name")
+# @app_commands.autocomplete(pokemon=pokemon_autocomplete)
+# @app_commands.guilds()
+# async def choose(interaction: Interaction, pokemon: str):
         
-    image_url = pokemon_data.get(pokemon)
-    try:
-        embed = Embed(title = f"You chose {pokemon}!")
-        embed.set_image(url=image_url)
-        await interaction.response.send_message("", embed=embed)
-    except Exception as e:
-        await interaction.response.send_message(f"You chose {pokemon}!")
-        print(f"Error drafting: {e}")
+#     image_url = pokemon_data.get(pokemon)
+#     try:
+#         embed = Embed(title = f"You chose {pokemon}!")
+#         embed.set_image(url=image_url)
+#         await interaction.response.send_message("", embed=embed)
+#     except Exception as e:
+#         await interaction.response.send_message(f"You chose {pokemon}!")
+#         print(f"Error drafting: {e}")
+
+
+# Check whose turn it is
+def getTurn(channel_id: str):
+    channel = ChannelServer.channelData["ListOfSheets"].get(channel_id, None)
+
+    turn = channel["Turn"]
+    playerCount = channel["Player Count"]
+    
+    # Turns 0-15 are round 1
+    round = turn // playerCount
+    
+    # the reverse turns are odd (since it is 0-indexed)
+    if round % 2:
+        return (round, playerCount - turn % playerCount)
+    # On the even turns. 
+    else:
+        return (round, turn % playerCount + 1)
 
 # Starting the Drafting Process
 # We need to check that the channel has a sheet associated
@@ -77,7 +95,7 @@ async def choose(interaction: Interaction, pokemon: str):
 # We need to check that they have enough points + enough slots + non duplicate.
 
 @app_commands.command(name="draft",description="draft a pokemon")
-@app_commands.describe(pokemon="Start typing a name")
+@app_commands.describe(pokemon="Pick a Pokemon")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete)
 @app_commands.guilds()
 async def draft(interaction: Interaction, pokemon: str):
@@ -88,24 +106,38 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.response.send_message("Please pick an actual Pokemon...", ephemeral=True)
         return
 
-    channel_id = interaction.channel_id
+    channel_id = str(interaction.channel_id)
 
-    spreadSheet = ggSheet.spreadDict.get(str(channel_id), None)
+    spreadSheet = ggSheet.spreadDict.get(channel_id, None)
 
     # Check Spreadsheet
     if not spreadSheet:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
         return
 
-    team = ChannelServer.getTeam(str(channel_id), str(interaction.user.id))
+    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
 
     # Check Team
     if not team:
-        await interaction.response.send_message("You are not on a team", ephemeral=True)
+        await interaction.response.send_message("You are not on a Team", ephemeral=True)
         return
     
+    # Check if allowed to draft
+    team = int(team)
+    (round, turn) = getTurn(channel_id)
+    channel = ChannelServer.channelData["ListOfSheets"].get(channel_id, None)
+    
+    # if it is your turn, you can draft
+    if team != turn:
+        #  if you have a skip, use skipped turn to draft
+        if team in channel["Skipped"]:
+            channel["Skipped"].remove(team)
+        else:
+            await interaction.response.send_message(f"It's not your turn! It's Team {turn}'s turn.")
+            return
+
     # Check if on Draft Board
-    pickCost = ggSheet.pointDict[str(channel_id)].get(pokemon,None)
+    pickCost = ggSheet.pointDict[channel_id].get(pokemon,None)
 
     if not pickCost or pickCost == 99:
         await interaction.response.send_message(f"You can't draft {pokemon}!")
@@ -114,12 +146,10 @@ async def draft(interaction: Interaction, pokemon: str):
     # Need to access gg sheets so we need thinking time
     await interaction.response.defer(thinking=True)
     
-    team = int(team)
-
-    (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, str(channel_id), team)
+    (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, channel_id, team)
     
     # Check Points left
-    pointsLeft = ggSheet.pointDict[str(channel_id)]["Total"] - pointTotal
+    pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
 
     # Check if slots open
     if nextSlot == -1:
@@ -138,13 +168,14 @@ async def draft(interaction: Interaction, pokemon: str):
     pointsLeft -= pickCost
 
     ggSheet.addPokemon(spreadSheet, team, nextSlot, pokemon)
+    channel["Turn"] += 1
     
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"You drafted {pokemon}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
     except Exception as e:
-        await interaction.followup.send(f"You drafted {pokemon}. You have {pointsLeft} points left!")
+        await interaction.followup.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         print(f"Error drafting: {e}")
 

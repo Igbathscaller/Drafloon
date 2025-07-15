@@ -50,7 +50,6 @@ async def on_ready():
         client.tree.add_command(ChannelServer.getPlayerRoster, guild=guild)
 
         # Draft Commands
-        client.tree.add_command(Draft.choose, guild=guild)
         client.tree.add_command(Draft.draft, guild=guild)
 
         synced = await client.tree.sync(guild=guild)

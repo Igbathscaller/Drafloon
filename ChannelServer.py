@@ -36,7 +36,7 @@ def initializeChannel(channel_id, playerCount):
         "spreadsheet": "",
         "Player Count": playerCount,
         "Turn": 0,
-        "Skipped Players": [],
+        "Skipped": [],
         "Rosters": {},
         "Players": {}
     }
@@ -63,7 +63,7 @@ def getSheet(channel_id: str):
 @app_commands.command(name="set_sheet", description="Connect Draft to a Sheet")
 @app_commands.guilds()
 @app_commands.describe(spreadsheet_url= "spreadsheet URL", player_count="number of players, defaults to 16")
-async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_count: int = None):
+async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_count: app_commands.Range[int, 1, None] = 16):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -78,9 +78,6 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
         return
     
     spreadsheet_key = match.group(1)
-
-    if not player_count:
-        player_count = 16
 
     if channel_id not in channelData["ListOfSheets"]:
         initializeChannel(channel_id, player_count)
@@ -112,9 +109,9 @@ async def getspreadsheet(interaction: Interaction):
 # Config Funtion
 # Needs Permission to Run
 
-@app_commands.command(name="add_player", description="Connect Discord User to a Roster")
+@app_commands.command(name="add_player", description="Add a Discord User to a Team")
 @app_commands.guilds()
-async def setPlayerRoster(interaction: Interaction, member: Member, roster: str):
+async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -125,25 +122,25 @@ async def setPlayerRoster(interaction: Interaction, member: Member, roster: str)
     if channel_id not in channelData["ListOfSheets"]:
         initializeChannel(channel_id)
 
-    if channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == roster:
+    if channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == team:
         # If it player is already the roster member
-        msg = f"Player {member.display_name} is already in Roster {roster}."
+        msg = f"Player {member.display_name} is already in Roster {team}."
     
     elif channelData["ListOfSheets"][channel_id]["Players"].get(user_id, None) == None:
         # if the player is not part of any roster
-        channelData["ListOfSheets"][channel_id]["Players"][user_id] = roster
-        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(roster, []).append(user_id)
+        channelData["ListOfSheets"][channel_id]["Players"][user_id] = team
+        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
-        msg = f"Player {member.display_name} linked to Roster {roster}."
+        msg = f"Player {member.display_name} linked to Roster {team}."
 
     else:
         # if the player is part of another roster
-        oldRoster = channelData["ListOfSheets"][channel_id]["Players"][user_id]
-        channelData["ListOfSheets"][channel_id]["Players"][user_id] = roster
-        channelData["ListOfSheets"][channel_id]["Rosters"][oldRoster].remove(user_id)
-        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(roster, []).append(user_id)
+        oldTeam = channelData["ListOfSheets"][channel_id]["Players"][user_id]
+        channelData["ListOfSheets"][channel_id]["Players"][user_id] = team
+        channelData["ListOfSheets"][channel_id]["Rosters"][oldTeam].remove(user_id)
+        channelData["ListOfSheets"][channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
-        msg = f"Player {member.display_name} moved from {oldRoster} to {roster}."
+        msg = f"Player {member.display_name} moved from Team {oldTeam} to Team {team}."
 
 
 
