@@ -22,6 +22,13 @@ Draft Automation Bot
 - Only needs access to the roster page
 - Possibly allow people to update their own logos and teamNames
 
+
+### Things to Implement/ Prevent bad actors
+- Locks for taking turns. 
+It seems pretty hard to sync up, but it is theoretically possible for players on the same team to draft at the same time.
+- Left Picks should probably limited to max 10 with an optional 2 backups in case of snipe.
+- Should I make a seperate Json File for it? I dont think storing in memory is that great.
+
 ### Order of Modules to prevent Circular Imports
 1. Mainbot (Highest Level, nothing imports this)
 2. DraftCommands
