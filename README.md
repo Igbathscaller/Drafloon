@@ -36,9 +36,3 @@ It seems pretty hard to sync up, but it is theoretically possible for players on
 2. DraftCommands
 3. GoogleInteraction
 4. ChannelServer (Cannot import any modules)
-
-### Errors and Bugs that need addressing
-- Skip needs to have two more checks
-  - The first issue is checking for the team turn before checking if the channel has been initilized will crash the bot
-  - The second issue is that if the team has not been initialized, it will also crash the bot
-
