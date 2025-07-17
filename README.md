@@ -28,7 +28,6 @@ Draft Automation Bot
 It seems pretty hard to sync up, but it is theoretically possible for players on the same team to draft at the same time.
 - Left Picks should probably limited to max 10 with an optional 2 backups in case of snipe.
 - Should I make a seperate Json File for it? I dont think storing in memory is that great.
-- **Thinking of creating a new file for timer, and seperating the timer functions into a new module**
 
 
 ### Order of Modules to prevent Circular Imports
