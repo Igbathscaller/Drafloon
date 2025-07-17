@@ -45,16 +45,16 @@ async def on_ready():
         guild = discord.Object(id=Guild_Id)
     
         # Related to saving and storing player and sheet information in the roster.
-        client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild)
-        client.tree.add_command(ChannelServer.getspreadsheet,   guild=guild)
-        client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild)
-        client.tree.add_command(ChannelServer.removePlayer,     guild=guild)
+        client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.getspreadsheet,   guild=guild) 
+        client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.getPlayerRoster,  guild=guild)
 
         # Draft Commands
         client.tree.add_command(Draft.draft,        guild=guild)
-        client.tree.add_command(Draft.skip_player,  guild=guild)
-        client.tree.add_command(Draft.stop_timer,   guild=guild)
+        client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
+        client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
 
         synced = await client.tree.sync(guild=guild)
 

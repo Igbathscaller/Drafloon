@@ -120,6 +120,7 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
         return
 
+    # Team of the person making the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
 
     # Check Team
@@ -127,17 +128,22 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.response.send_message("You are not on a Team", ephemeral=True)
         return
     
-    # Check if allowed to draft
+    ## Check if allowed to draft
+    # Turn gives you the team depending on turn number (aka whose turn it is)
     team = int(team)
-    (round, turn) = getTurn(channel_id)
+    (round, turn) = getTurn(channel_id) 
     channel = ChannelServer.channelData.get(channel_id, None)
-    
+    # There is slightly different incrementing if the player is retaking a skipped turn
+    skipped = False
+
+    # Players are allowed to draft if they have been either skipped or it is their turn
     # if it is your turn, you can draft
     if team != turn:
         #  if you have a skip, use skipped turn to draft
         if team in channel["Skipped"]:
-            channel["Skipped"].remove(team)
-            turn -= 1
+            skipped = True
+            # channel["Skipped"].remove(team)
+            # turn -= 1
         else:
             await interaction.response.send_message(f"It's not your turn! It's Team {turn}'s turn.")
             return
@@ -174,7 +180,14 @@ async def draft(interaction: Interaction, pokemon: str):
     pointsLeft -= pickCost
 
     ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
-    channel["Turn"] += 1
+            
+    # If it is a skip turn, let them take their skipped turn
+    if skipped:
+        channel["Skipped"].remove(team)
+    # Otherwise increment the channel order
+    else:
+        channel["Turn"] += 1
+    
     ChannelServer.saveJson()
     
     image_url = pokemon_data.get(pokemon)

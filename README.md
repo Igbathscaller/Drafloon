@@ -18,6 +18,18 @@ Draft Automation Bot
   - We can add more specific functionality in case something is sniped or taken
   - Can possibly do it with an app but this would be significantly more implementation time (I also only have a 1 cpu server, so I want to limit commands)
 
+#### Draft Command Specifics
+##### Order of Errors
+- Check if the input is valid (they chose from the options)
+- Check if the channel has an associated spreadsheet
+- Check if the player is on a team
+- Check if the turn of the draft and matches the player's team (allows skipped teams go make up)
+- Check if the pokemon is draft legal (99 points are not allowed + not on draft board)
+- Check if you have enough slots to draft (Currently hard-coded 11 slots)
+- Check if you have enough points to draft the mon
+- Check if you someone has drafted the pokemon
+
+
 ### Google Sheets
 - Only needs access to the roster page
 - Possibly allow people to update their own logos and teamNames
