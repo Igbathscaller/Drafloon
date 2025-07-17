@@ -83,7 +83,7 @@ def skip(channel_id: str):
         channel["Skipped"].append(team)
         channel["Turn"]+=1
         ChannelServer.saveJson()
-        return team
+        return str(team)
     
 # Manually end timer
 def end_timer(channel_id: str, team: str):
@@ -207,10 +207,11 @@ async def start_timer(interaction: Interaction, timeout = 10):
             await asyncio.sleep(timeout)
             await auto_skip(interaction)
         except asyncio.CancelledError:
-        # Ignore cancelled timer
+            print("Timer cancelled cleanly.")
             pass
         except Exception as e:
             print(f"Timer Error: {e}")
+            raise
     # Start the timer
     timers[key] = asyncio.create_task(timer())
 
@@ -223,14 +224,15 @@ async def skip_player(interaction: Interaction):
         return
     
     channel_id = str(interaction.channel_id)
-    team = str(skip(channel_id))
+    team = skip(channel_id)
 
     if not team:
-        await interaction.response.send_message(f"This Channel has no associated sheet")
+        await interaction.response.send_message(f"This Channel has no Associated Sheet")
     else:
-        skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"][team]
+        # In case the team has no players or has not been initialized
+        skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
         mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-        await interaction.channel.send(f"Team {team}: {mentions} Skipped.")
+        await interaction.response.send_message(f"Team {team}: {mentions} Skipped.")
         # Start Timer at the end of each action. Only activate timer if we know it'll work.
         await start_timer(interaction)
 
@@ -240,9 +242,10 @@ async def skip_player(interaction: Interaction):
 async def auto_skip(interaction: Interaction):
     
     channel_id = str(interaction.channel_id)
-    team = str(skip(channel_id))
+    team = skip(channel_id)
 
-    skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"][team]
+    # In case the team has no players or has not been initialized
+    skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
     mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
 
     await interaction.channel.send(f"Team {team}: {mentions} Skipped. Faster Next Time Stupid")
@@ -259,5 +262,6 @@ async def stop_timer(interaction: Interaction):
     team = getTurn(channel_id)[1]
 
     end_timer(channel_id, team)
+    asyncio.sleep(0)
 
     await interaction.response.send_message("Timer has been stopped.")
