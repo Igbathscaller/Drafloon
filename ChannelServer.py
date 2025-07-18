@@ -25,10 +25,10 @@ def saveJson():
 
 
 # Allows other modules to know when the Json has been updated
-spreadsheet_callback = None
-def register_spreadsheet_callback(callback):
-    global spreadsheet_callback
-    spreadsheet_callback = callback
+module_callback = None
+def register_module_callback(callback):
+    global module_callback
+    module_callback = callback
 
 # Whenever you want to add a new channel to the variable you can.
 def initializeChannel(channel_id, playerCount):
@@ -85,9 +85,9 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
     channelData[channel_id]["spreadsheet"] = spreadsheet_key
     saveJson()
 
-    # Testing call back
-    if spreadsheet_callback:
-        spreadsheet_callback(channel_id, spreadsheet_key)
+    # Updates other modules
+    if module_callback:
+        module_callback(channel_id, spreadsheet_key)
 
     await interaction.response.send_message(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
 

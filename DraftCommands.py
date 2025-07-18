@@ -15,7 +15,6 @@ pokemon_names = sorted(pokemon_data.keys())
 # Key for searching
 pokemon_names_lower = [name.lower() for name in pokemon_names]
 
-
 # Testing Pokemon Choosing Command
 # Autocomplete function
 async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -57,7 +56,7 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
 # Check whose turn it is
 def getTurn(channel_id: str):
-    channel = ChannelServer.channelData.get(channel_id, None)
+    channel = ChannelServer.channelData[channel_id]
 
     turn = channel["Turn"]
     playerCount = channel["Player Count"]
@@ -202,7 +201,6 @@ async def draft(interaction: Interaction, pokemon: str):
     await start_timer(interaction)
 
 # Timer and Automatic Skipping
-
 timers = {}
 
 async def start_timer(interaction: Interaction, timeout = 10):
@@ -249,8 +247,6 @@ async def skip_player(interaction: Interaction):
         # Start Timer at the end of each action. Only activate timer if we know it'll work.
         await start_timer(interaction)
 
-
-
 # Automatically Skip
 async def auto_skip(interaction: Interaction):
     
@@ -275,6 +271,86 @@ async def stop_timer(interaction: Interaction):
     team = getTurn(channel_id)[1]
 
     end_timer(channel_id, team)
-    asyncio.sleep(0)
+    await asyncio.sleep(0)
 
     await interaction.response.send_message("Timer has been stopped.")
+
+
+# Load The Json Data
+def loadPicksJson():
+    try:
+        with open("Picks.json", "r") as f:
+            data = json.load(f)
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
+        data = {}
+
+    return data
+
+pickData = loadPicksJson()
+
+# Save ChannelData to Json
+def savePicksJson():
+    with open("Picks.json", "w") as f:
+        json.dump(pickData, f, indent=4)
+
+# Whenever you want to add a new channel to the variable you can.
+def initializeChannel(channel_id):
+    pickData[channel_id] = {
+        "Rosters": {}
+    }
+    savePicksJson()
+
+# Whenever they are updating the channel_id, only initialize the Channel if it doesn't exist
+def loadPicks(channel_id: str):
+    if channel_id not in pickData:
+        initializeChannel(channel_id)
+
+# adds 
+def addPick(channel_id: str, team: str, pick: str, backup: str = None, backup2: str = None):
+    picks = pickData[channel_id]["Rosters"].get(team, None)
+    if picks == None:
+        pickData[channel_id]["Rosters"][team] = []
+        picks = pickData[channel_id]["Rosters"][team]
+    picks.append({
+        "Left_Pick": pick,
+        "Backup_1": backup,
+        "Backup_2": backup2
+    })
+    savePicksJson()
+
+
+@app_commands.command(name="leave_pick",description="leave a pick")
+@app_commands.describe(pokemon="Pick a Pokemon")
+@app_commands.autocomplete(pokemon=pokemon_autocomplete)
+@app_commands.guilds()
+async def leave_pick(interaction: Interaction, pokemon: str):
+    
+    # Check For Errors before starting the draft process
+    # Check actual pokemon
+    if pokemon not in pokemon_names:
+        await interaction.response.send_message("Please pick an actual Pokemon...", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+
+    # Checks if the channel has been initialized
+    channel = pickData.get(channel_id, None)
+    if not channel:
+        await interaction.response.send_message("No associated sheet in channel", ephemeral=True)
+
+    # Team of the person making the Draft Pick
+    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
+
+    # Check Team
+    if not team:
+        await interaction.response.send_message("You are not on a Team", ephemeral=True)
+        return
+
+    # Add the pick to the team
+    addPick(channel_id, team, pokemon)
+    await interaction.response.send_message(f"You left the following pick(s): {pokemon}", ephemeral=True)
+
+
+    
+
+

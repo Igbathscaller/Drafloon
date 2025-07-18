@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-import json
 import discord
 from discord.ext import commands
 
@@ -21,22 +20,23 @@ intents.guilds = True
 
 client = commands.Bot(command_prefix="!", intents=intents)
 
-
-## Sets up the GG Sheets Interaction
+## Sets up updating information in other modules when running ChannelServer
 # Handles updating the spreadsheet for other modules
+# Handles updating the left picks
 def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadSheet(channel_id, sheet_key)
     ggSheet.loadPoints(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
+    Draft.loadPicks(channel_id)
 
-ChannelServer.register_spreadsheet_callback(handle_spreadsheet_update)
+ChannelServer.register_module_callback(handle_spreadsheet_update)
 
 # Loads Spreadsheets from channelData into GG Sheets Interaction
-for channel_id, info in ChannelServer.channelData.items():
-        ggSheet.loadSheet(channel_id, info["spreadsheet"])
+for channel_id, channel in ChannelServer.channelData.items():
+        ggSheet.loadSheet(channel_id, channel["spreadsheet"])
         ggSheet.loadPoints(channel_id)
         ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
-
+        Draft.loadPicks(channel_id)
 
 @client.event
 async def on_ready():
@@ -55,6 +55,8 @@ async def on_ready():
         client.tree.add_command(Draft.draft,        guild=guild)
         client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
+        client.tree.add_command(Draft.leave_pick,   guild=guild)
+
 
         synced = await client.tree.sync(guild=guild)
 
