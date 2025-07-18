@@ -3,23 +3,8 @@ Draft Automation Bot
 
 - Purpose is expediate the draft process and automate left picks and skipping.
 
-## Plan
-### Discord Bot (what information to store)
-- Link a trades channel with its corresponding spreadsheet (limit only to mods)
-- Command to link a user to a specific team/roster (limit only to mods)
-- *Update when more things need to be stored*
-- List of Pokemon
-- Update the Json File and discord file to allow easier access to ids.
-- **Update the code so that it only reads the JSON file once, still update it on each write/update to the JSON variable**
-
-### Discord Bot (player commands and functionality)
-- Add the ability to draft and leave picks
-  - For leaving picks we can start with a ranked system that goes to the next one if it is taken
-  - We can add more specific functionality in case something is sniped or taken
-  - Can possibly do it with an app but this would be significantly more implementation time (I also only have a 1 cpu server, so I want to limit commands)
-
-#### Draft Command Specifics
-##### Order of Errors
+### Draft Command Specifics
+#### Order of Checks
 - Check if the input is valid (they chose from the options)
 - Check if the channel has an associated spreadsheet
 - Check if the player is on a team
@@ -29,21 +14,41 @@ Draft Automation Bot
 - Check if you have enough points to draft the mon
 - Check if you someone has drafted the pokemon
 
+## Plan
 
 ### Google Sheets
-- Only needs access to the roster page
-- Possibly allow people to update their own logos and teamNames
+- Possibly allow people to update their own logos and teamNames (optional/low prio)
 
-
-### Things to Implement QOL/ Prevent bad actors
-- Locks for taking turns. 
+### Things to Implement
+- Locks for taking turns (optional/low prio) 
 It seems pretty hard to sync up, but it is theoretically possible for players on the same team to draft at the same time.
 - Left Picks should probably limited to max 10 with an optional 2 backups in case of snipe.
-- Should I make a seperate Json File for it? I dont think storing in memory is that great.
+- Need to add a way to delete left picks
+- Maybe a way to also edit the left picks or replace them, so they don't need to delete and keep readding them
+- Needs to add the left picks when skipped or give players an option to set a timer for when to do a left pick
+- Probably a way to remove a player from the skipped list in case of manual draft.
 
+## Things that were successfully implemented
+#### Discord Interaction
+- Command to Link a trades channel with a corresponding spreadsheet (mods only)
+- Command to Link a user to a specific team/roster (mods only)
+- Command to see the players on a roster
+- Command to see associate spreadsheet (might make mod only)
 
-### Order of Modules to prevent Circular Imports
-1. Mainbot (Highest Level, nothing imports this)
-2. DraftCommands
-3. GoogleInteraction
-4. ChannelServer (Cannot import any modules)
+#### Google Sheets
+- Ability to view roster
+- Ability to update roster
+- Stores links to roster of startup so we reduce queries
+- Draft command currently takes 3 queries (checks if the pokemon has been seen before, finds the next free slot, updates the sheet)
+  - Query can be reduced if we save the pokemon on the board (but this leads to issues if we manually update the board)
+  - Same issue arises if we want to update the next free slot.
+  - Both issues can be remedied by having an update doc function whenever we make a manual change to the doc. Signficantly reducing query time.
+- Loads saved spreadsheets on runtime
+- Whenever a spreadsheet is opened, it is saved so it does not need to be re-accessed.
+
+#### Draft Functionality
+- Ability to draft picks
+- Ability to leave picks
+- Automatically starts a timer when you run
+- Skips when you don't make a pick by a certain time.
+- Saves list of pokemon on startup
