@@ -28,6 +28,12 @@ def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadPoints(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
     Draft.loadPicks(channel_id)
+    Draft.loadDraftedData(channel_id)
+    # print(ggSheet.spreadDict)
+    # print(ggSheet.pointDict)
+    # print(ggSheet.writeCellDict)
+    # print(Draft.pickData)
+    print(Draft.draftedData)
 
 ChannelServer.register_module_callback(handle_spreadsheet_update)
 
@@ -37,6 +43,12 @@ for channel_id, channel in ChannelServer.channelData.items():
         ggSheet.loadPoints(channel_id)
         ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
         Draft.loadPicks(channel_id)
+        Draft.loadDraftedData(channel_id)
+        # print(ggSheet.spreadDict)
+        # print(ggSheet.pointDict)
+        # print(ggSheet.writeCellDict)
+        # print(Draft.pickData)
+        print(Draft.draftedData)
 
 @client.event
 async def on_ready():

@@ -68,6 +68,8 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
 
+    await interaction.response.defer(ephemeral=True)
+
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
@@ -85,11 +87,11 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
     channelData[channel_id]["spreadsheet"] = spreadsheet_key
     saveJson()
 
-    # Updates other modules
+    # Updates other modules, Takes longer now that I'm adding more functions
     if module_callback:
         module_callback(channel_id, spreadsheet_key)
 
-    await interaction.response.send_message(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
+    await interaction.followup.send(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
 
 
 @app_commands.command(name="get_sheet", description="Get Sheet name")

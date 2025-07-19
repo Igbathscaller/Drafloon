@@ -103,7 +103,7 @@ def readRosterRange(spreadSheet: gspread.Spreadsheet, roster: int, rows: range):
     return(result)
 
 # returns all pokemon on the roster as a set
-def readFullRoster(spreadSheet: gspread.Spreadsheet, rosters: int, pokemon: int):
+def readFullRoster(spreadSheet: gspread.Spreadsheet, rosters: int, pokemon: int) -> set:
 
     rosterSheet = spreadSheet.worksheet("Roster Code")
 

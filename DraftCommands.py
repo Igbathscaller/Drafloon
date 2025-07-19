@@ -7,6 +7,7 @@ import GoogleInteraction as ggSheet
 import ChannelServer
 
 #region: Loading the Data at Startup + Functions for handling data
+
 #list of Pokemon
 with open("pokemon.json", "r") as f:
     pokemon_data = json.load(f)
@@ -15,6 +16,7 @@ pokemon_names = sorted(pokemon_data.keys())
 # Key for searching
 pokemon_names_lower = [name.lower() for name in pokemon_names]
 
+# # pickData
 # Load The Json Data
 def loadPicksJson():
     try:
@@ -44,9 +46,16 @@ def loadPicks(channel_id: str):
     if channel_id not in pickData:
         initializeChannel(channel_id)
 
-# Timer and Automatic Skipping
-# There should only be one timer per channel_id
-timers = {}
+
+# # Drafted Pokemon
+# Locally saved variable
+draftedData = {}
+
+def loadDraftedData(channel_id: str):
+    
+    spreadSheet = ggSheet.spreadDict.get(channel_id, None)
+
+    draftedData[channel_id] = ggSheet.readFullRoster(spreadSheet, 16, 11)
 
 #endregion
 
@@ -221,6 +230,9 @@ async def view_picks(interaction: Interaction):
 
 #region: Timer Related Functions
 
+# There should only be one timer per channel_id
+timers = {}
+
 # Starting Timer
 async def start_timer(interaction: Interaction, timeout = 10):
     
@@ -327,7 +339,7 @@ async def skip_player(interaction: Interaction):
 #region: Drafting/Updating the Sheet
 
 # updates Roster directly given that the pokemon is a valid choice, otherwise returns false
-async def addToRoster(channel_id: str, pokemon: str, team: int, nextSlot: int, pointsLeft: int, drafted: set):
+async def addToRoster(channel_id: str, pokemon: str, team: int, nextSlot: int, pointsLeft: int):
     '''
     returns: (success: bool, result: str | int)
         success (bool): if adding to Roster was sucessful
@@ -352,12 +364,14 @@ async def addToRoster(channel_id: str, pokemon: str, team: int, nextSlot: int, p
         return (False, f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
     
     # Check if someone else drafted the mon
+    drafted = draftedData[channel_id]
     if pokemon in drafted:
         # await interaction.followup.send(f"Someone already drafted {pokemon}.")
         return (False, f"Someone already drafted {pokemon}.")
 
 
     ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
+    drafted.add(pokemon)
     pointsLeft -= pickCost
     return (True, pointsLeft)
 
@@ -412,11 +426,10 @@ async def draft(interaction: Interaction, pokemon: str):
     # Need to access gg sheets so we need thinking time
     await interaction.response.defer(thinking=True)
 
-    drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
     nextSlot, pointTotal = ggSheet.getNextSlot(spreadSheet, channel_id, team)
     pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
 
-    (success, output) = await addToRoster(channel_id, pokemon, team, nextSlot, pointsLeft, drafted)
+    (success, output) = await addToRoster(channel_id, pokemon, team, nextSlot, pointsLeft)
 
     if not success:
         # Send Error message on failed draft
@@ -470,25 +483,24 @@ async def auto_pick(interaction: Interaction):
         return
     
     # Get the Pokemon and start the draft process
-    drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
     nextSlot, pointTotal = ggSheet.getNextSlot(spreadSheet, channel_id, team)
     pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
     pokemon = None
 
     for pick in picks:
-        success, result = await addToRoster(channel_id, pick["Main"], team, nextSlot, pointsLeft, drafted)
+        success, result = await addToRoster(channel_id, pick["Main"], team, nextSlot, pointsLeft)
         pickIndex += 1
         if success:
             pointsLeft = result
             pokemon = pick["Main"]
             break
         elif pick["Backup_1"]:
-            (success, result) = await addToRoster(channel_id, pick["Backup_1"], team, nextSlot, pointsLeft, drafted)
+            (success, result) = await addToRoster(channel_id, pick["Backup_1"], team, nextSlot, pointsLeft)
             pointsLeft = result
             pokemon = pick["Backup_1"]
             break
         elif pick["Backup_2"]:
-            (success, result) = await addToRoster(channel_id, pick["Backup_2"], team, nextSlot, pointsLeft, drafted)
+            (success, result) = await addToRoster(channel_id, pick["Backup_2"], team, nextSlot, pointsLeft)
             pointsLeft = result
             pokemon = pick["Backup_2"]
             break
