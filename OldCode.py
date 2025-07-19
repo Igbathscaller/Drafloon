@@ -285,3 +285,29 @@
 
 #     # print(f"Updated {source_sheet_name}!{source_cell} to '{value}'")
 
+
+    # # Check if on Draft Board
+    # pickCost = ggSheet.pointDict[channel_id].get(pokemon,None)
+    # if not pickCost or pickCost == 99:
+    #     await interaction.response.send_message(f"You can't draft {pokemon}!")
+    #     return
+    # # Need to access gg sheets so we need thinking time
+    # await interaction.response.defer(thinking=True)
+    # (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, channel_id, team)
+    # # Check Points left
+    # pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
+    # # Check if slots open
+    # if nextSlot == -1:
+    #     await interaction.followup.send("You can't draft any more Pokemon!")
+    #     return
+    # # Check if you have enough points
+    # if pointsLeft < pickCost:
+    #     await interaction.followup.send(f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
+    #     return
+    # # Check if someone else drafted the mon
+    # drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
+    # if pokemon in drafted:
+    #     await interaction.followup.send(f"Someone already drafted {pokemon}.")
+    #     return
+    # pointsLeft -= pickCost
+    # ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)

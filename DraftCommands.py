@@ -56,6 +56,11 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
 # Check whose turn it is
 def getTurn(channel_id: str):
+    '''
+    returns: (str name, int points): 
+        name (str): The Pokémon's name.
+        points (int): The point value of the Pokémon.
+    '''
     channel = ChannelServer.channelData[channel_id]
 
     turn = channel["Turn"]
@@ -72,7 +77,11 @@ def getTurn(channel_id: str):
         return (round, turn % playerCount + 1)
 
 # Skip Helper Function.
-def skip(channel_id: str):
+def skip(channel_id: str) -> str:
+    '''
+    returns:
+        team (str): the skipped team
+    '''
     channel = ChannelServer.channelData.get(channel_id, None)
     # if the channel is not valid
     if not channel:
@@ -83,20 +92,57 @@ def skip(channel_id: str):
         channel["Turn"]+=1
         ChannelServer.saveJson()
         return str(team)
-    
+
 # Manually end timer
 def end_timer(channel_id: str, team: str):
-    key = (channel_id, team)
-    if key in timers:
-        timers[key].cancel()
-        del timers[key]
+    # Ends the timer in the channel
+    if channel_id in timers:
+        timers[channel_id].cancel()
+        del timers[channel_id]
+
+
+# I believe this function should probably get the nextslot and save it, for leaving picks, it is a lot of redundant queries.
+async def addToRoster(interaction: Interaction, spreadSheet, channel_id: str, pokemon: str, team: int):
+    '''
+    returns: (success: bool, result: str | int)
+        success (bool): if adding to Roster was sucessful
+        result (str): error message
+        result (int): points left
+    '''
+
+    # Check if on Draft Board
+    pickCost = ggSheet.pointDict[channel_id].get(pokemon,None)
+
+    if not pickCost or pickCost == 99:
+        # await interaction.response.send_message(f"You can't draft {pokemon}!")
+        return (False, f"You can't draft {pokemon}!")
+    
+    (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, channel_id, team)
+    
+    # Check Points left
+    pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
+
+    # Check if slots open
+    if nextSlot == -1:
+        # await interaction.followup.send("You can't draft any more Pokemon!")
+        return (False, "You can't draft any more Pokemon!")
+    # Check if you have enough points
+    if pointsLeft < pickCost:
+        # await interaction.followup.send(f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
+        return (False, f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
+    # Check if someone else drafted the mon
+    drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
+    if pokemon in drafted:
+        # await interaction.followup.send(f"Someone already drafted {pokemon}.")
+        return (False, f"Someone already drafted {pokemon}.")
+
+    pointsLeft -= pickCost
+
+    ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
+    return (True, pointsLeft)
 
 
 # Starting the Drafting Process
-# We need to check that the channel has a sheet associated
-# We need to check that the player has an associated team
-# We need to check it is the player's turn
-# We need to check that they have enough points + enough slots + non duplicate.
 
 @app_commands.command(name="draft",description="draft a pokemon")
 @app_commands.describe(pokemon="Pick a Pokemon")
@@ -141,45 +187,23 @@ async def draft(interaction: Interaction, pokemon: str):
         #  if you have a skip, use skipped turn to draft
         if team in channel["Skipped"]:
             skipped = True
-            # channel["Skipped"].remove(team)
-            # turn -= 1
         else:
             await interaction.response.send_message(f"It's not your turn! It's Team {turn}'s turn.")
             return
-
-    # Check if on Draft Board
-    pickCost = ggSheet.pointDict[channel_id].get(pokemon,None)
-
-    if not pickCost or pickCost == 99:
-        await interaction.response.send_message(f"You can't draft {pokemon}!")
-        return
-
+    
     # Need to access gg sheets so we need thinking time
     await interaction.response.defer(thinking=True)
-    
-    (nextSlot, pointTotal) = ggSheet.getNextSlot(spreadSheet, channel_id, team)
-    
-    # Check Points left
-    pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
 
-    # Check if slots open
-    if nextSlot == -1:
-        await interaction.followup.send("You can't draft any more Pokemon!")
-        return
-    # Check if you have enough points
-    if pointsLeft < pickCost:
-        await interaction.followup.send(f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
-        return
-    # Check if someone else drafted the mon
-    drafted = ggSheet.readFullRoster(spreadSheet, 16, 11)
-    if pokemon in drafted:
-        await interaction.followup.send(f"Someone already drafted {pokemon}.")
-        return
+    (success, output) = await addToRoster(interaction, spreadSheet, channel_id, pokemon, team)
 
-    pointsLeft -= pickCost
+    if not success:
+        # Send Error message on failed draft
+        await interaction.followup.send(output)
+        return
+    else:
+        # otherwise save the number of points left
+        pointsLeft = output
 
-    ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
-            
     # If it is a skip turn, let them take their skipped turn
     if skipped:
         channel["Skipped"].remove(team)
@@ -201,22 +225,23 @@ async def draft(interaction: Interaction, pokemon: str):
     await start_timer(interaction)
 
 # Timer and Automatic Skipping
+# There should only be one timer per channel_id
 timers = {}
 
 async def start_timer(interaction: Interaction, timeout = 10):
     
     channel_id = str(interaction.channel_id)
-    
-    team = getTurn(channel_id)[1]
+
     # End Previous Timer in the Channel 
-    key = (channel_id, team)
-    if key in timers:
-        timers[key].cancel()
+    channel_id
+    if channel_id in timers:
+        timers[channel_id].cancel()
+    
     # Define a timer 
     async def timer():
         try:
             await asyncio.sleep(timeout)
-            await auto_skip(interaction)
+            await auto_pick(interaction)
         except asyncio.CancelledError:
             print("Timer cancelled cleanly.")
             pass
@@ -224,7 +249,7 @@ async def start_timer(interaction: Interaction, timeout = 10):
             print(f"Timer Error: {e}")
             raise
     # Start the timer
-    timers[key] = asyncio.create_task(timer())
+    timers[channel_id] = asyncio.create_task(timer())
 
 # Manual Skip
 @app_commands.command(name="skip",description="Skip the Current Player (mod)")
@@ -246,19 +271,6 @@ async def skip_player(interaction: Interaction):
         await interaction.response.send_message(f"Team {team}: {mentions} Skipped.")
         # Start Timer at the end of each action. Only activate timer if we know it'll work.
         await start_timer(interaction)
-
-# Automatically Skip
-async def auto_skip(interaction: Interaction):
-    
-    channel_id = str(interaction.channel_id)
-    team = skip(channel_id)
-
-    # In case the team has no players or has not been initialized
-    skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
-    mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-
-    await interaction.channel.send(f"Team {team}: {mentions} Skipped. Faster Next Time Stupid")
-    await start_timer(interaction)
 
 @app_commands.command(name="stop_timer",description="Skip the Current Player (mod)")
 @app_commands.guilds()
@@ -312,7 +324,7 @@ def addPick(channel_id: str, team: str, pick: str, backup: str = None, backup2: 
         pickData[channel_id]["Rosters"][team] = []
         picks = pickData[channel_id]["Rosters"][team]
     picks.append({
-        "Left_Pick": pick,
+        "Main": pick,
         "Backup_1": backup,
         "Backup_2": backup2
     })
@@ -325,6 +337,92 @@ def getPicks(channel_id: str, team: str):
     else:
         return picks
 
+# Auto Pick from left picks
+async def auto_pick(interaction: Interaction):
+    channel_id = str(interaction.channel_id)
+    channel = ChannelServer.channelData.get(channel_id, None)
+    pickList = pickData.get(channel_id, None)
+    
+    spreadSheet = ggSheet.spreadDict.get(channel_id, None)
+
+    # Check Spreadsheet
+    if not spreadSheet:
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+        return
+
+    # Collect the team and turn
+    (round, team) = getTurn(channel_id)
+
+    picks = pickList["Rosters"].get(str(team), None)
+
+    # If there are no picks, we will autoskip them
+    if not picks:
+        await auto_skip(interaction)
+        return
+    
+    # Get the Pokemon and start the draft process
+    pokemon = None
+    pickIndex = 0
+    pointsLeft = 0
+
+    for pick in picks:
+        success, result = await addToRoster(interaction, spreadSheet, channel_id, pick["Main"], team)
+        pickIndex += 1
+        if success:
+            pointsLeft = result
+            pokemon = pick["Main"]
+            break
+        elif pick["Backup_1"]:
+            (success, result) = await addToRoster(interaction, spreadSheet, channel_id, pick["Backup_1"], team)
+            pointsLeft = result
+            pokemon = pick["Main"]
+            break
+        elif pick["Backup_2"]:
+            (success, result) = await addToRoster(interaction, spreadSheet, channel_id, pick["Backup_2"], team)
+            pointsLeft = result
+            pokemon = pick["Main"]
+            break
+    # Delete the pick after it has been utilized
+    del picks[:pickIndex]
+    print(picks)
+    savePicksJson()
+    
+
+    if not pokemon:
+        await interaction.channel.send("No draftable picks left")
+        await auto_skip(interaction)
+        return
+
+    # In case the team has no players or has not been initialized
+    autoPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
+    mentions = " ".join(f"<@{user_id}>" for user_id in autoPlayers)
+    
+    channel["Turn"]+=1
+    ChannelServer.saveJson()
+
+    image_url = pokemon_data.get(pokemon)
+    try:
+        embed = Embed(title = f"Team {team}: {mentions} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed.set_image(url=image_url)
+        await interaction.followup.send("", embed=embed)
+    except Exception as e:
+        await interaction.followup.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        print(f"Error drafting: {e}")
+    # Start Timer at the end of each action
+    await start_timer(interaction)    
+
+# Automatically Skip
+async def auto_skip(interaction: Interaction):
+    
+    channel_id = str(interaction.channel_id)
+    team = skip(channel_id)
+
+    # In case the team has no players or has not been initialized
+    skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
+    mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+
+    await interaction.channel.send(f"Team {team}: {mentions} Skipped. Faster Next Time Stupid")
+    await start_timer(interaction)
 
 @app_commands.command(name="leave_pick",description="Leave a Pick Privately with the Bot")
 @app_commands.describe(pokemon="Pick a Pokemon")
@@ -336,6 +434,10 @@ async def leave_pick(interaction: Interaction, pokemon: str, backup_1: str = Non
     # Check actual pokemon
     if pokemon not in pokemon_names:
         await interaction.response.send_message("Please pick an actual Pokemon...", ephemeral=True)
+        return
+    
+    if (backup_1 and backup_1 not in pokemon_names) or (backup_2 and backup_2 not in pokemon_names):
+        await interaction.response.send_message("Please pick actual Pokemon...", ephemeral=True)
         return
 
     channel_id = str(interaction.channel_id)
@@ -387,7 +489,7 @@ async def view_picks(interaction: Interaction):
     text = ["```"]
     for i in range(len(picks)):
         pick = picks[i]
-        main = pick["Left_Pick"] or "None"
+        main = pick["Main"] or "None"
         b1   = pick["Backup_1"]
         b2   = pick["Backup_2"]
         text.append(f"Pick {i+1}: {main}")
