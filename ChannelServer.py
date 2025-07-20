@@ -1,6 +1,6 @@
 import json
 import asyncio
-from discord import Interaction,Member
+from discord import Interaction,Member,Embed,Color
 from discord import app_commands
 from re import search
 
@@ -15,20 +15,13 @@ def loadJson():
 
     return data
 
-# Stores Json Data as a variables on runtime.
-channelData = loadJson()
-
 # Save ChannelData to Json
 def saveJson():
     with open("ChannelServer.json", "w") as f:
         json.dump(channelData, f, indent=4)
 
-
-# Allows other modules to know when the Json has been updated
-module_callback = None
-def register_module_callback(callback):
-    global module_callback
-    module_callback = callback
+# Stores Json Data as a variables on runtime.
+channelData = loadJson()
 
 # Whenever you want to add a new channel to the variable you can.
 def initializeChannel(channel_id, playerCount):
@@ -40,6 +33,14 @@ def initializeChannel(channel_id, playerCount):
         "Rosters": {},
         "Players": {}
     }
+
+# Allows other modules to know when the Json has been updated
+module_callback = None
+def register_module_callback(callback):
+    global module_callback
+    module_callback = callback
+
+
 
 # Helper Function for Draft Commands
 def getTeam(channel_id: str, user_id: str):
@@ -94,6 +95,30 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
     await interaction.followup.send(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
 
 
+@app_commands.command(name="remove_sheet", description="Removes the sheet and deletes associate information")
+@app_commands.guilds()
+async def removeSpreadsheet(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    await interaction.response.defer(ephemeral=True)
+
+    channel_id = str(interaction.channel_id)
+    channel_name = str(interaction.channel)
+
+    if channel_id in channelData:
+        del channelData[channel_id]
+        saveJson()
+
+    # Updates other modules, Takes longer now that I'm adding more functions
+    if module_callback:
+        module_callback(channel_id, None)
+
+    await interaction.followup.send(f"#`{channel_name}` has been reset", ephemeral=True)
+
+
+
 @app_commands.command(name="get_sheet", description="Get Sheet name")
 @app_commands.guilds()
 async def getspreadsheet(interaction: Interaction):
@@ -121,18 +146,20 @@ async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
     user_id = str(member.id)
 
     if channel_id not in channelData:
-        initializeChannel(channel_id)
+        await interaction.response.send_message("No Sheet Associated with channel.", ephemeral=True)
+        return
+
 
     if channelData[channel_id]["Players"].get(user_id, None) == team:
         # If it player is already the roster member
-        msg = f"Player {member.display_name} is already in Roster {team}."
+        msg = f"Player {member.display_name} is already on Team {team}."
     
     elif channelData[channel_id]["Players"].get(user_id, None) == None:
         # if the player is not part of any roster
         channelData[channel_id]["Players"][user_id] = team
         channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
-        msg = f"Player {member.display_name} linked to Roster {team}."
+        msg = f"Player {member.display_name} added to Team {team}."
 
     else:
         # if the player is part of another roster
@@ -153,7 +180,7 @@ async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
 # Check if player is on team
 # Removes player from team if on a team
 
-@app_commands.command(name="remove_player", description="Connect Discord User to a Roster")
+@app_commands.command(name="remove_player", description="Remove a Discord User from a Team")
 @app_commands.guilds()
 async def removePlayer(interaction: Interaction, member: Member):
     if not interaction.user.guild_permissions.manage_messages:
@@ -173,9 +200,9 @@ async def removePlayer(interaction: Interaction, member: Member):
         roster = players[user_id]   # Get the team
         del players[user_id]        # Delete player from user id
         channelData[channel_id]["Rosters"][roster].remove(user_id) # Remove player from the team
-        msg = f"Player {member.display_name} removed from Roster {roster}."
+        msg = f"Player {member.display_name} removed from Team {roster}."
     else:
-        msg = f"Player {member.display_name} is not on any Roster."
+        msg = f"Player {member.display_name} is not on any Team."
 
     saveJson()
 
@@ -183,28 +210,41 @@ async def removePlayer(interaction: Interaction, member: Member):
 
 
 
-@app_commands.command(name="get_players", description="Get players in a roster")
+@app_commands.command(name="view_players", description="Get all the players involved")
 @app_commands.guilds()
-async def getPlayerRoster(interaction: Interaction, roster: str):
+async def getPlayers(interaction: Interaction):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
     if channel_id not in channelData:
-        msg = f"#`{channel_name}` has no linked spreadsheet"
+        await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
     
-    elif channelData[channel_id]["Rosters"].get(roster,[]) == []:
-        msg = f"Roster {roster} is empty"
+    rosters = channelData[channel_id].get("Rosters", {})
+    if not rosters:
+        await interaction.response.send_message("No teams found.", ephemeral=True)
+        return
+    
+    embed = Embed(
+        title=f"Teams for #{channel_name}",
+        color= Color.blue()
+    )
 
-    else:
-        ids = channelData[channel_id]["Rosters"][roster]
-        members = await asyncio.gather(*[
-            interaction.guild.fetch_member(int(id))
-            for id in ids
-        ])
+    for roster, ids in rosters.items():
+
+        members = []
+        for member_id in ids:
+            member = await interaction.guild.fetch_member(int(member_id))
+            members.append(member)
+
         display_names = [member.display_name for member in members if member]
-        msg = f"Player(s): {', '.join(display_names)} are on Roster {roster}"
+        
+        if display_names:
+            embed.add_field(name=f"Team {roster}", value=", ".join(display_names), inline=False)
+        else:
+            embed.add_field(name=f"Team {roster}", value="It's a ghost town here", inline=False)
 
-    await interaction.response.send_message(msg, ephemeral=True)
+    await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
 
 

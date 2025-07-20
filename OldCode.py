@@ -311,3 +311,30 @@
     #     return
     # pointsLeft -= pickCost
     # ggSheet.addPokemon(channel_id, team, nextSlot, pokemon)
+
+
+    # elif channelData[channel_id]["Rosters"].get(roster,[]) == []:
+    #     msg = f"Roster {roster} is empty"
+
+    # else:
+    #     ids = channelData[channel_id]["Rosters"][roster]
+    #     members = await asyncio.gather(*[
+    #         interaction.guild.fetch_member(int(id))
+    #         for id in ids
+    #     ])
+    #     display_names = [member.display_name for member in members if member]
+    #     msg = f"Player(s): {', '.join(display_names)} are on Roster {roster}"
+
+    # await interaction.response.send_message(msg, ephemeral=True)
+
+# Combined into another function to reduce calls
+# def loadDraftedData(channel_id: str):
+#     # This is the removal if statement
+#     # If the spreadsheet doesn't exist in spreadDict, I want it cleared from pointDict
+#     if channel_id not in spreadDict:
+#         draftedData.pop(channel_id, None)
+#         return
+
+#     spreadSheet = spreadDict[channel_id]
+
+#     draftedData[channel_id] = readFullRoster(spreadSheet, 16, 11)

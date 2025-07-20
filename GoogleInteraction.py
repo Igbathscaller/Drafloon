@@ -22,28 +22,70 @@ spreadDict = {}
 
 # Open the Spreadsheets by key and adds it to the dictionary
 def loadSheet(channelID:str, spreadsheetKey:str):
-    spreadDict[channelID] = client.open_by_key(spreadsheetKey)
+    # This is the removal if statement
+    # If the key is None, I want everything in spreadDict to be cleared
+    if not spreadsheetKey:
+        spreadDict.pop(channelID, None)
+    else:
+        spreadDict[channelID] = client.open_by_key(spreadsheetKey)
 
 # Initialize Pokemon Points Dictionary
 pointDict = {}
 
+# # Drafted Pokemon
+# Locally saved variable
+draftedData = {}
+
 # Get Spreadsheets by key and adds points to the dictionary
-def loadPoints(channelID:str):
-    sheet = spreadDict[channelID].worksheet("Draft Code")
-    pokemon = sheet.col_values(2)[1:]    # pokemon
-    points  = sheet.col_values(4)[1:]    # points
+def loadPointsAndDrafted(channelID:str):
+    # This is the removal if statement
+    # If the spreadsheet doesn't exist in spreadDict, I want it cleared from pointDict
+    if channelID not in spreadDict:
+        pointDict.pop(channelID, None)
+        return
+
+    sheet = spreadDict[channelID]
+    # all cells you want to call in one call
+    # B2:D is Pokemon + their Points
+    # F1 is the total (this could probably done better)
+    # f'B6:{rowcol_to_a1(6 + 11, 16)}' is the full roster
+    calls = ['Draft Code!B2:D', 'Draft Code!F1', f'Roster Code!B6:{rowcol_to_a1(6 + 11, 16)}']
+
+    # get the response (the output type is slightly different)
+    response = sheet.values_batch_get(calls)
+    recieved = response['valueRanges']
+
+    # pokemon/points
+    values = recieved[0].get('values', [])
+    # total points
+    total = recieved[1].get('values', [[0]])[0][0]
+
+    pokemon = [row[0] for row in values]  # pokemon
+    points  = [row[-1] for row in values]  # points
     
     points = list(map(safe_int, points))
 
     pointDict[channelID] = dict(zip(pokemon, points))
-    pointDict[channelID]["Total"] = safe_int(sheet.cell(1,6).value)
-    # pointDict[channelID][pokemon_name] -> points
+    pointDict[channelID]["Total"] = safe_int(total)
+    ### pointDict[channelID][pokemon_name] -> points
+
+    # Load Drafted Data
+    roster_cells = recieved[2].get('values', [])
+    drafted = {cell for row in roster_cells for cell in row if cell}
+    draftedData[channelID] = drafted
+
 
 # Initialize Update Dictionary
 writeCellDict = {}
 
 # Get Spreadsheets by key and adds points to the dictionary
 def loadWriteCells(channelID:str, teamCount: int):
+    # This is the removal if statement
+    # If the spreadsheet doesn't exist in spreadDict, I want it cleared from writeCellDict
+    if channelID not in spreadDict:
+        writeCellDict.pop(channelID, None)
+        return
+
     rosterSheet = spreadDict[channelID].worksheet("Roster Code")
     
     # clear and initialize the elements
@@ -73,7 +115,6 @@ def loadWriteCells(channelID:str, teamCount: int):
             "end":  int(end_row)
         }
     # writeCellDict[channelID][teamNum] -> {sheet}!{col}{start}:{col}{end}
-
 
 # Helper Function
 def safe_int(value):
@@ -149,17 +190,17 @@ def addPokemon(channelID: str, team: int, draftNum: int, pokemon:str):
 def removePokemon(channelID: str, team: int, draftNum: int):
     updateRoster(channelID, team, draftNum+3, "-")
 
-def getTeamInfo(spreadSheet: gspread.spreadsheet, roster: int):
+def getTeamInfo(spreadSheet: gspread.Spreadsheet, roster: int):
     teamInfo = readRosterRange(spreadSheet, roster, range(3))
     return (f"Coach: {teamInfo[0].value}\n"
             f"Team Name: {teamInfo[1].value}\n"
             f"Time Zone: {teamInfo[2].value}")
 
-def getPokemon(spreadSheet: gspread.spreadsheet, roster: int):
+def getPokemon(spreadSheet: gspread.Spreadsheet, roster: int):
     return list(map(lambda x: x.value, readRosterRange(spreadSheet, roster, range(5,16))))
 
 # Returns (index of next slot, point total)
-def getNextSlot(spreadSheet: gspread.spreadsheet, channel_id: str, roster: int):
+def getNextSlot(spreadSheet: gspread.Spreadsheet, channel_id: str, roster: int):
     rosterList = readRosterRange(spreadSheet, roster, range(5,16))
     
     pointTotal = 0
@@ -169,9 +210,3 @@ def getNextSlot(spreadSheet: gspread.spreadsheet, channel_id: str, roster: int):
         else:
             pointTotal += pointDict[channel_id].get(rosterList[i].value, 0)
     return (-1, pointTotal)
-
-# Testing Functions Now
-
-# loadSheet("1","1GMJELKMakvgJwIjnmydQksq4pCx7al04CF3HiL777Io")
-# loadPoints("1")
-# loadWriteCells("1",16)

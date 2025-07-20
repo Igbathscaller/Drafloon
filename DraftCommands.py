@@ -43,21 +43,18 @@ def initializeChannel(channel_id):
 
 # Whenever they are updating the channel_id, only initialize the Channel if it doesn't exist
 def loadPicks(channel_id: str):
+    # This is the removal if statement
+    # If the spreadsheet doesn't exist in spreadDict, I want it cleared from pickData
+    if channel_id not in ggSheet.spreadDict:
+        pickData.pop(channel_id, None)
+        savePicksJson()
+        return
+
     if channel_id not in pickData:
         initializeChannel(channel_id)
 
-
-# # Drafted Pokemon
-# Locally saved variable
-draftedData = {}
-
-def loadDraftedData(channel_id: str):
-    
-    spreadSheet = ggSheet.spreadDict.get(channel_id, None)
-
-    draftedData[channel_id] = ggSheet.readFullRoster(spreadSheet, 16, 11)
-
 #endregion
+
 
 # Autocomplete function (helper function for limiting client options)
 async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -119,10 +116,11 @@ def getTurn(channel_id: str):
     else:
         return (round, turn % playerCount + 1)
 
+
 #region: Adding Picks and Viewing them
 
 # adds pick to the roster
-def addPick(channel_id: str, team: str, pick: str, backup: str = None, backup2: str = None):
+def addPick(channel_id: str, team: str, pick: str, backup: str | None = None, backup2: str | None = None):
     picks = pickData[channel_id]["Rosters"].get(team, None)
     if picks == None:
         pickData[channel_id]["Rosters"][team] = []
@@ -134,10 +132,10 @@ def addPick(channel_id: str, team: str, pick: str, backup: str = None, backup2: 
     })
     savePicksJson()
 
-def getPicks(channel_id: str, team: str):
+def getPicks(channel_id: str, team: str) -> list:
     picks = pickData[channel_id]["Rosters"].get(team, None)
     if picks == None:
-        return None
+        return []
     else:
         return picks
 
@@ -147,7 +145,7 @@ def getPicks(channel_id: str, team: str):
                        backup_2 = "If your backup was also sniped")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete, backup_1=pokemon_autocomplete, backup_2=pokemon_autocomplete)
 @app_commands.guilds()
-async def leave_pick(interaction: Interaction, pokemon: str, backup_1: str = None, backup_2: str = None):
+async def leave_pick(interaction: Interaction, pokemon: str, backup_1: str | None = None, backup_2: str | None = None):
     
     # Check if it is actual pokemon (in the list of choices)
     if pokemon not in pokemon_names:
@@ -163,7 +161,7 @@ async def leave_pick(interaction: Interaction, pokemon: str, backup_1: str = Non
     # Checks if the channel has been initialized
     channel = pickData.get(channel_id, None)
     if not channel:
-        await interaction.response.send_message("No associated sheet in channel", ephemeral=True)
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
 
     # Team of the person leaving the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
@@ -186,7 +184,7 @@ async def view_picks(interaction: Interaction):
     # Checks if the channel has been initialized
     channel = pickData.get(channel_id, None)
     if not channel:
-        await interaction.response.send_message("No associated sheet in channel", ephemeral=True)
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
 
     # Team of the person making the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
@@ -228,6 +226,7 @@ async def view_picks(interaction: Interaction):
 
 #endregion
 
+
 #region: Timer Related Functions
 
 # There should only be one timer per channel_id
@@ -239,7 +238,6 @@ async def start_timer(interaction: Interaction, timeout = 10):
     channel_id = str(interaction.channel_id)
 
     # End Previous Timer in the Channel 
-    channel_id
     if channel_id in timers:
         timers[channel_id].cancel()
     
@@ -279,6 +277,7 @@ async def stop_timer(interaction: Interaction):
 
     await interaction.response.send_message("Timer has been stopped.")
 #endregion
+
 
 #region: Skip Related Function
 
@@ -324,7 +323,7 @@ async def skip_player(interaction: Interaction):
     team = skip(channel_id)
 
     if not team:
-        await interaction.response.send_message(f"This Channel has no Associated Sheet")
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet")
     else:
         # In case the team has no players or has not been initialized
         skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
@@ -335,6 +334,7 @@ async def skip_player(interaction: Interaction):
 
 
 #endregion
+
 
 #region: Drafting/Updating the Sheet
 
@@ -364,7 +364,7 @@ async def addToRoster(channel_id: str, pokemon: str, team: int, nextSlot: int, p
         return (False, f"You only have {pointsLeft} points left! You can't draft {pokemon}.")
     
     # Check if someone else drafted the mon
-    drafted = draftedData[channel_id]
+    drafted = ggSheet.draftedData[channel_id]
     if pokemon in drafted:
         # await interaction.followup.send(f"Someone already drafted {pokemon}.")
         return (False, f"Someone already drafted {pokemon}.")
