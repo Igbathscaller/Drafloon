@@ -1,0 +1,237 @@
+from discord.ui import View, Button
+from discord import ButtonStyle, Interaction, Embed, Color, app_commands
+
+import ChannelServer
+import DraftCommands as Draft
+
+#region: Adding Picks and Viewing them
+
+# adds pick to the roster
+def addPick(channel_id: str, team: str, main: str, 
+            backup: str | None = None, backup2: str | None = None, slot: int | None = None):
+    picks = Draft.pickData[channel_id]["Rosters"].get(team, None)
+    if picks == None:
+        Draft.pickData[channel_id]["Rosters"][team] = []
+        picks = Draft.pickData[channel_id]["Rosters"][team]
+    
+    if slot == None:
+        picks.append({
+            "Main": main,
+            "Backup_1": backup,
+            "Backup_2": backup2
+        })
+    else:
+        picks.insert(slot - 1,{
+            "Main": main,
+            "Backup_1": backup,
+            "Backup_2": backup2
+        })
+
+    Draft.savePicksJson()
+
+def getPicks(channel_id: str, team: str) -> list:
+    picks = Draft.pickData[channel_id]["Rosters"].get(team, None)
+    if picks == None:
+        return []
+    else:
+        return picks
+
+@app_commands.command(name="leave_pick",description="Leave a Pick Privately with the Bot")
+@app_commands.describe(pokemon = "Pick a Pokemon", 
+                       backup_1 = "If your main choice was sniped", 
+                       backup_2 = "If your backup was also sniped",
+                       slot= "if you want it to be a higher priority")
+@app_commands.autocomplete(pokemon=Draft.pokemon_autocomplete, backup_1=Draft.pokemon_autocomplete, backup_2=Draft.pokemon_autocomplete)
+@app_commands.guilds()
+async def leave_pick(interaction: Interaction, pokemon: str, 
+                     backup_1: str | None = None, backup_2: str | None = None, slot: int | None = None):
+    
+    # Check if it is actual pokemon (in the list of choices)
+    if pokemon not in Draft.pokemon_names:
+        await interaction.response.send_message("Please pick an actual Pokemon...", ephemeral=True)
+        return
+    
+    if (backup_1 and backup_1 not in Draft.pokemon_names) or (backup_2 and backup_2 not in Draft.pokemon_names):
+        await interaction.response.send_message("Please pick actual Pokemon...", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+
+    # Checks if the channel has been initialized
+    channel = Draft.pickData.get(channel_id, None)
+    if not channel:
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+
+    # Team of the person leaving the Draft Pick
+    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
+
+    # Check Team
+    if not team:
+        await interaction.response.send_message("You are not on a Team", ephemeral=True)
+        return
+    
+    if len(Draft.pickData[channel_id]["Rosters"].get(team, [])) >= 10 :
+            await interaction.response.send_message("You can only leave up to 10 picks", ephemeral=True)
+            return
+
+    # Add the pick to the team
+    addPick(channel_id, team, pokemon, backup_1, backup_2, slot)
+
+    await interaction.response.send_message(f"You left the following pick(s): {', '.join(filter(None, [pokemon, backup_1, backup_2]))}", ephemeral=True)
+
+# Track active messages by channel_id -> team -> list of messages
+active_messages = {}
+
+def add_active_message(channel_id: str, team: str, message):
+    if channel_id not in active_messages: 
+        # add channel if not there
+        active_messages[channel_id] = {}
+    if team not in active_messages[channel_id]:
+        # add team if not there
+        active_messages[channel_id][team] = []
+    # append the message
+    active_messages[channel_id][team].append(message)
+
+def remove_active_message(channel_id: str, team: str, message):
+    try:
+        active_messages[channel_id][team].remove(message)
+    except (KeyError, ValueError):
+        pass
+
+async def update_leave_pick_messages(channel_id: str, team: str, picks):
+    messages = active_messages.get(channel_id, {}).get(team, [])
+    embed = leave_picks_embed(team, picks)
+    view = RemovePickView(picks, channel_id, team)
+    for message in messages:
+        try:
+            await message.edit(embed=embed, view=view)
+        except Exception as e:
+            print(f"Failed to update message {message.id}: {e}")
+
+def leave_picks_embed(team: str, picks: list) -> Embed:
+    embed = Embed(
+        title=f"Team {team}",
+        color=Color.brand_green()
+    )
+    if picks:
+        text = ["```"]
+        for i, pick in enumerate(picks):
+            main = pick.get("Main") or "None"
+            b1 = pick.get("Backup_1")
+            b2 = pick.get("Backup_2")
+            text.append(f"Pick {i+1}: {main}")
+            if b1:
+                text.append(f"\t└ Backup 1: {b1}")
+            if b2:
+                text.append(f"\t└ Backup 2: {b2}")
+        text.append("```")
+        embed.add_field(name="Your Left Picks: ", value="\n".join(text), inline=False)
+    else:
+        embed.add_field(name="Your Left Picks: ", value="You have left no picks", inline=False)
+    return embed
+
+# Classes for buttons to Remove.
+class RemovePickView(View):
+    def __init__(self, picks, channel_id, team):
+        super().__init__(timeout=10) # Initialize the View Button
+        self.picks = picks
+        self.channel_id = channel_id
+        self.team = team
+
+        for i, pick in enumerate(picks):
+            # Save the index, the 
+            self.add_item(RemovePickButton(index=i, parent_view=self))
+
+    # Remove all tracked messages for this channel+team
+    async def on_timeout(self):
+        messages = active_messages.get(self.channel_id, {}).get(self.team, [])
+        for message in messages:
+            try:
+                # Edit message to remove the buttons
+                await message.edit(view=None)
+            except Exception:
+                pass
+
+        # Clean up the tracking dict
+        if self.channel_id in active_messages:
+            if self.team in active_messages[self.channel_id]:
+                del active_messages[self.channel_id][self.team]
+
+
+class RemovePickButton(Button):
+    def __init__(self, index, parent_view):
+        super().__init__(
+            label=f"Remove {index+1}",
+            style=ButtonStyle.danger,
+            custom_id=f"remove_{index}"
+        )
+        self.index = index
+        self.parent_view = parent_view
+
+    async def callback(self, interaction: Interaction):        
+        if not (0 <= self.index < len(self.parent_view.picks)):
+            await interaction.response.send_message("That pick no longer exists.", ephemeral=True)
+            return
+
+        removed_pick = self.parent_view.picks.pop(self.index)
+        pokemon = removed_pick.get("Main")
+        backup_1 = removed_pick.get("Backup_1")
+        backup_2 = removed_pick.get("Backup_2")
+
+        # Saves Picks to the Json.
+        Draft.savePicksJson()
+
+        #edit the current message with updated picks and buttons
+        embed = leave_picks_embed(self.parent_view.team, self.parent_view.picks)
+        view = RemovePickView(self.parent_view.picks, self.parent_view.channel_id, self.parent_view.team)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+        # Update all other active pick messages too
+        await update_leave_pick_messages(
+            self.parent_view.channel_id,
+            self.parent_view.team,
+            self.parent_view.picks
+        )
+
+        # Confirm removal privately
+        await interaction.followup.send(
+            f"Removed Pick {self.index + 1}: {', '.join(filter(None, [pokemon, backup_1, backup_2]))}",
+            ephemeral=True
+        )
+
+
+@app_commands.command(name="view_picks",description="View Your Picks Privately and Remove old Picks")
+@app_commands.guilds()
+async def view_picks(interaction: Interaction):
+
+    channel_id = str(interaction.channel_id)
+
+    # Checks if the channel has been initialized
+    channel = Draft.pickData.get(channel_id, None)
+    if not channel:
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+
+    # Team of the person making the Draft Pick
+    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
+
+    # Check Team
+    if not team:
+        await interaction.response.send_message("You are not on a Team", ephemeral=True)
+        return
+
+    # get the picks of the team
+    picks = getPicks(channel_id, team)
+
+    embed = leave_picks_embed(team, picks)
+
+    # Build button UI for removing picks
+    view = RemovePickView(picks, channel_id, team)
+
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+    # message = await interaction.response.send_message(embed=embed, view=view)
+
+    sent_message = await interaction.original_response()
+    add_active_message(channel_id, team, sent_message)
+
+
+#endregion

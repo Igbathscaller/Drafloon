@@ -7,6 +7,7 @@ import time
 import ChannelServer
 import DraftCommands as Draft
 import GoogleInteraction as ggSheet
+import LeftPicks as Picks
 
 
 # Import Neccessary Variables and Data
@@ -89,8 +90,10 @@ async def on_ready():
         client.tree.add_command(Draft.draft,        guild=guild)
         client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
-        client.tree.add_command(Draft.leave_pick,   guild=guild)
-        client.tree.add_command(Draft.view_picks,   guild=guild)
+        
+        # Pick Commands
+        client.tree.add_command(Picks.leave_pick,   guild=guild)
+        client.tree.add_command(Picks.view_picks,   guild=guild)
 
 
         synced = await client.tree.sync(guild=guild)

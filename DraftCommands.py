@@ -1,7 +1,7 @@
 from bisect import bisect_left
 import json
-from discord import Interaction,Embed,Color
-from discord import app_commands
+from discord import Interaction,Embed,app_commands
+
 import asyncio
 import GoogleInteraction as ggSheet
 import ChannelServer
@@ -115,116 +115,6 @@ def getTurn(channel_id: str):
     # On the even turns. 
     else:
         return (round, turn % playerCount + 1)
-
-
-#region: Adding Picks and Viewing them
-
-# adds pick to the roster
-def addPick(channel_id: str, team: str, pick: str, backup: str | None = None, backup2: str | None = None):
-    picks = pickData[channel_id]["Rosters"].get(team, None)
-    if picks == None:
-        pickData[channel_id]["Rosters"][team] = []
-        picks = pickData[channel_id]["Rosters"][team]
-    picks.append({
-        "Main": pick,
-        "Backup_1": backup,
-        "Backup_2": backup2
-    })
-    savePicksJson()
-
-def getPicks(channel_id: str, team: str) -> list:
-    picks = pickData[channel_id]["Rosters"].get(team, None)
-    if picks == None:
-        return []
-    else:
-        return picks
-
-@app_commands.command(name="leave_pick",description="Leave a Pick Privately with the Bot")
-@app_commands.describe(pokemon = "Pick a Pokemon", 
-                       backup_1 = "If your main choice was sniped", 
-                       backup_2 = "If your backup was also sniped")
-@app_commands.autocomplete(pokemon=pokemon_autocomplete, backup_1=pokemon_autocomplete, backup_2=pokemon_autocomplete)
-@app_commands.guilds()
-async def leave_pick(interaction: Interaction, pokemon: str, backup_1: str | None = None, backup_2: str | None = None):
-    
-    # Check if it is actual pokemon (in the list of choices)
-    if pokemon not in pokemon_names:
-        await interaction.response.send_message("Please pick an actual Pokemon...", ephemeral=True)
-        return
-    
-    if (backup_1 and backup_1 not in pokemon_names) or (backup_2 and backup_2 not in pokemon_names):
-        await interaction.response.send_message("Please pick actual Pokemon...", ephemeral=True)
-        return
-
-    channel_id = str(interaction.channel_id)
-
-    # Checks if the channel has been initialized
-    channel = pickData.get(channel_id, None)
-    if not channel:
-        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
-
-    # Team of the person leaving the Draft Pick
-    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
-
-    # Check Team
-    if not team:
-        await interaction.response.send_message("You are not on a Team", ephemeral=True)
-        return
-
-    # Add the pick to the team
-    addPick(channel_id, team, pokemon, backup_1, backup_2)
-    await interaction.response.send_message(f"You left the following pick(s): {pokemon}", ephemeral=True)
-
-@app_commands.command(name="view_picks",description="View Your Picks Privately")
-@app_commands.guilds()
-async def view_picks(interaction: Interaction):
-
-    channel_id = str(interaction.channel_id)
-
-    # Checks if the channel has been initialized
-    channel = pickData.get(channel_id, None)
-    if not channel:
-        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
-
-    # Team of the person making the Draft Pick
-    team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
-
-    # Check Team
-    if not team:
-        await interaction.response.send_message("You are not on a Team", ephemeral=True)
-        return
-
-    # Add the pick to the team
-    picks = getPicks(channel_id, team)
-
-    embed = Embed(
-        title=f"Team {team}",
-        color = Color.brand_green()
-    )
-
-    text = ["```"]
-    for i in range(len(picks)):
-        pick = picks[i]
-        main = pick["Main"] or "None"
-        b1   = pick["Backup_1"]
-        b2   = pick["Backup_2"]
-        text.append(f"Pick {i+1}: {main}")
-        if b1:
-            text.append(f"\t└ Backup 1: {b1}")
-        if b2:
-            text.append(f"\t└ Backup 2: {b2}")
-    text.append("```")
-
-    embed.add_field(
-        name="Your Left Picks",
-        value="\n".join(text),
-        inline=False
-    )
-
-    await interaction.response.send_message(embed=embed,ephemeral=True)
-    # await interaction.response.send_message(embed=embed)
-
-#endregion
 
 
 #region: Timer Related Functions
