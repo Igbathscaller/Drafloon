@@ -1,5 +1,6 @@
 import json
-import asyncio
+import time
+
 from discord import Interaction,Member,Embed,Color
 from discord import app_commands
 from re import search
@@ -29,6 +30,7 @@ def initializeChannel(channel_id, playerCount):
         "spreadsheet": "",
         "Player Count": playerCount,
         "Turn": 0,
+        "Paused" : False,
         "Skipped": [],
         "Rosters": {},
         "Players": {}
@@ -245,7 +247,99 @@ async def getPlayers(interaction: Interaction):
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+# These are the active skip timers in the Draft Commands.
+timers = {}
+end_times = {}
+
+@app_commands.command(name="pause_draft", description="Pause drafting and timers in this channel")
+async def pause_draft(interaction: Interaction):
+
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+
+    if channel_id in channelData:
+
+        channel = channelData[channel_id]
+        channel["Paused"] = True
+        saveJson()
+
+        if channel_id in timers:
+            timers[channel_id].cancel()
+            del timers[channel_id]
+            del end_times[channel_id]
+
+        await interaction.response.send_message("Drafting has been paused. Timers are frozen.")
+    else:
+        await interaction.response.send_message("No Sheet Associated with channel.")
+
+@app_commands.command(name="resume_draft", description="Resume drafting and timers in this channel")
+async def resume_draft(interaction: Interaction):
+
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+    
+    if channel_id in channelData:
+
+        channel = channelData[channel_id]
+        channel["Paused"] = False
+        saveJson()
+        if module_callback:
+            module_callback(channel_id, channel["spreadsheet"])
+
+        await interaction.response.send_message("Drafting has resumed.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Channel not initialized.", ephemeral=True)
+
+@app_commands.command(name="reload_draft", description="Reload and reimport the data in the draft")
+async def reload_draft(interaction: Interaction):
+
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+    
+    if channel_id in channelData:
+        
+        if channel_id in timers:
+            timers[channel_id].cancel()
+            del timers[channel_id]
+            del end_times[channel_id]
 
 
+        channel = channelData[channel_id]
+
+        if module_callback:
+            module_callback(channel_id, channel["spreadsheet"])
+
+        await interaction.response.send_message("Drafting has resumed.", ephemeral=True)
+    else:
+        await interaction.response.send_message("Channel not initialized.", ephemeral=True)
 
 
+@app_commands.command(name="view_timer", description="Check how much time remains before the auto-pick")
+@app_commands.guilds()  # Optional: specify guilds if needed
+async def view_timer(interaction: Interaction):
+    channel_id = str(interaction.channel_id)
+    end_time = end_times.get(channel_id, None)
+
+    if end_time is None:
+        await interaction.response.send_message("No timer is currently running.", ephemeral=True)
+        return
+
+    # Convert monotonic-based end time to Unix timestamp
+    now_real = time.time()
+    monotonic = time.monotonic()
+    diff = end_time - monotonic
+
+    if diff <= 0:
+        return "The timer has expired."
+
+    unix_timestamp = int(now_real + diff)
+    await interaction.response.send_message(f"Timer ends <t:{unix_timestamp}:R>", ephemeral=True)

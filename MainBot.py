@@ -85,6 +85,10 @@ async def on_ready():
         client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.getPlayers,       guild=guild)
+        client.tree.add_command(ChannelServer.pause_draft,      guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.resume_draft,     guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.reload_draft,     guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.view_timer,       guild=guild)
 
         # Draft Commands
         client.tree.add_command(Draft.draft,        guild=guild)

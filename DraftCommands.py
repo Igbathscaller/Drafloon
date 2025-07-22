@@ -1,5 +1,6 @@
 from bisect import bisect_left
 import json
+import time
 from discord import Interaction,Embed,app_commands
 
 import asyncio
@@ -94,7 +95,7 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
     return [app_commands.Choice(name=name, value=name) for name in results]
 
-# Check whose turn it is
+# Check whose turn it is (This could be moved into Channel Server or GG Sheets)
 def getTurn(channel_id: str):
     '''
     returns: (str name, int points): 
@@ -119,17 +120,14 @@ def getTurn(channel_id: str):
 
 #region: Timer Related Functions
 
-# There should only be one timer per channel_id
-timers = {}
-
 # Starting Timer
 async def start_timer(interaction: Interaction, timeout = 180):
     
     channel_id = str(interaction.channel_id)
 
     # End Previous Timer in the Channel 
-    if channel_id in timers:
-        timers[channel_id].cancel()
+    if channel_id in ChannelServer.timers:
+        ChannelServer.timers[channel_id].cancel()
     
     # Define a timer 
     async def timer():
@@ -143,14 +141,19 @@ async def start_timer(interaction: Interaction, timeout = 180):
             print(f"Timer Error: {e}")
             raise
     # Start the timer
-    timers[channel_id] = asyncio.create_task(timer())
+    ChannelServer.timers[channel_id] = asyncio.create_task(timer())
+    # Compute and save end time
+    end_time = time.monotonic() + timeout
+    ChannelServer.end_times[channel_id] = end_time
+
 
 # End Timer
 def end_timer(channel_id: str):
     # Ends the timer in the channel
-    if channel_id in timers:
-        timers[channel_id].cancel()
-        del timers[channel_id]
+    if channel_id in ChannelServer.timers:
+        ChannelServer.timers[channel_id].cancel()
+        del ChannelServer.timers[channel_id]
+        del ChannelServer.end_times[channel_id]
 
 # Stop Timer Command
 @app_commands.command(name="stop_timer",description="Skip the Current Player (mod)")
@@ -288,6 +291,13 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
         return
     
+
+    # Check Paused
+    if channel["Paused"]:
+        await interaction.response.send_message("This Channel's Draft has been paused", ephemeral=True)
+        return
+
+
     # Team of the person making the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
 

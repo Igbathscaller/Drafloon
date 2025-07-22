@@ -146,7 +146,7 @@ def picks_embed(team: str, picks: list) -> Embed:
 # Classes for buttons to Remove.
 class RemovePickView(View):
     def __init__(self, channel_id, team):
-        super().__init__(timeout=20) # Initialize the View Button
+        super().__init__(timeout=180) # Initialize the View Button
         self.channel_id = channel_id
         self.team = team
         self.message = None
