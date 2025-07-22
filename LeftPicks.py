@@ -1,5 +1,6 @@
 from discord.ui import View, Button
 from discord import ButtonStyle, Interaction, Embed, Color, app_commands
+import asyncio
 
 import ChannelServer
 import DraftCommands as Draft
@@ -61,6 +62,7 @@ async def leave_pick(interaction: Interaction, pokemon: str,
     channel = Draft.pickData.get(channel_id, None)
     if not channel:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+        return
 
     # Team of the person leaving the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
@@ -79,8 +81,13 @@ async def leave_pick(interaction: Interaction, pokemon: str,
 
     await interaction.response.send_message(f"You left the following pick(s): {', '.join(filter(None, [pokemon, backup_1, backup_2]))}", ephemeral=True)
 
+    # update people viewing picks
+    await update_leave_pick_messages(channel_id, team)
+
+
 # Track active messages by channel_id -> team -> list of messages
 active_messages = {}
+locks = {}
 
 def add_active_message(channel_id: str, team: str, message):
     if channel_id not in active_messages: 
@@ -98,17 +105,23 @@ def remove_active_message(channel_id: str, team: str, message):
     except (KeyError, ValueError):
         pass
 
-async def update_leave_pick_messages(channel_id: str, team: str, picks):
+async def get_remove_lock(channel_id: str, team: str) -> asyncio.Lock:
+    locks.setdefault(channel_id, {})
+    locks[channel_id].setdefault(team, asyncio.Lock())
+    return locks[channel_id][team]
+
+async def update_leave_pick_messages(channel_id: str, team: str):
+    picks = getPicks(channel_id, team)
+    embed = picks_embed(team, picks)
     messages = active_messages.get(channel_id, {}).get(team, [])
-    embed = leave_picks_embed(team, picks)
-    view = RemovePickView(picks, channel_id, team)
+    view = RemovePickView(channel_id, team)
     for message in messages:
         try:
             await message.edit(embed=embed, view=view)
         except Exception as e:
             print(f"Failed to update message {message.id}: {e}")
 
-def leave_picks_embed(team: str, picks: list) -> Embed:
+def picks_embed(team: str, picks: list) -> Embed:
     embed = Embed(
         title=f"Team {team}",
         color=Color.brand_green()
@@ -132,72 +145,69 @@ def leave_picks_embed(team: str, picks: list) -> Embed:
 
 # Classes for buttons to Remove.
 class RemovePickView(View):
-    def __init__(self, picks, channel_id, team):
-        super().__init__(timeout=10) # Initialize the View Button
-        self.picks = picks
+    def __init__(self, channel_id, team):
+        super().__init__(timeout=20) # Initialize the View Button
         self.channel_id = channel_id
         self.team = team
+        self.message = None
 
-        for i, pick in enumerate(picks):
+        picks = getPicks(channel_id, team)
+
+        for i in range(len(picks)):
             # Save the index, the 
-            self.add_item(RemovePickButton(index=i, parent_view=self))
+            self.add_item(RemovePickButton(index=i, channel_id=channel_id, team=team))
 
     # Remove all tracked messages for this channel+team
+    # I have to update this so it only affects the timed out message
     async def on_timeout(self):
-        messages = active_messages.get(self.channel_id, {}).get(self.team, [])
-        for message in messages:
+        if self.message:
             try:
-                # Edit message to remove the buttons
-                await message.edit(view=None)
-            except Exception:
-                pass
+                await self.message.edit(view=None)
+            except Exception as e:
+                print(f"Failed to edit message: {e}")
 
-        # Clean up the tracking dict
-        if self.channel_id in active_messages:
-            if self.team in active_messages[self.channel_id]:
-                del active_messages[self.channel_id][self.team]
+        # Remove this message from active_messages
+        try:
+            active_messages[self.channel_id][self.team].remove(self.message)
+        except (KeyError, ValueError):
+            pass
 
 
 class RemovePickButton(Button):
-    def __init__(self, index, parent_view):
+    def __init__(self, index, channel_id, team):
         super().__init__(
             label=f"Remove {index+1}",
-            style=ButtonStyle.danger,
-            custom_id=f"remove_{index}"
+            style=ButtonStyle.danger
         )
         self.index = index
-        self.parent_view = parent_view
+        self.channel_id = channel_id
+        self.team = team
 
-    async def callback(self, interaction: Interaction):        
-        if not (0 <= self.index < len(self.parent_view.picks)):
-            await interaction.response.send_message("That pick no longer exists.", ephemeral=True)
-            return
+    async def callback(self, interaction: Interaction):  
+        lock = await get_remove_lock(self.channel_id, self.team)
+        
+        async with lock:
+            picks = getPicks(self.channel_id, self.team)
+            if not (0 <= self.index < len(picks)):
+                await interaction.response.send_message("That pick no longer exists.", ephemeral=True)
+                return
+            
+            removed_pick = picks.pop(self.index)
+            pokemon = removed_pick.get("Main")
+            backup_1 = removed_pick.get("Backup_1")
+            backup_2 = removed_pick.get("Backup_2")
 
-        removed_pick = self.parent_view.picks.pop(self.index)
-        pokemon = removed_pick.get("Main")
-        backup_1 = removed_pick.get("Backup_1")
-        backup_2 = removed_pick.get("Backup_2")
+            # Saves Picks to the Json.
+            Draft.savePicksJson()
 
-        # Saves Picks to the Json.
-        Draft.savePicksJson()
+            # Edit the active messages with updated picks and buttons
+            await update_leave_pick_messages(self.channel_id, self.team)
 
-        #edit the current message with updated picks and buttons
-        embed = leave_picks_embed(self.parent_view.team, self.parent_view.picks)
-        view = RemovePickView(self.parent_view.picks, self.parent_view.channel_id, self.parent_view.team)
-        await interaction.response.edit_message(embed=embed, view=view)
-
-        # Update all other active pick messages too
-        await update_leave_pick_messages(
-            self.parent_view.channel_id,
-            self.parent_view.team,
-            self.parent_view.picks
-        )
-
-        # Confirm removal privately
-        await interaction.followup.send(
-            f"Removed Pick {self.index + 1}: {', '.join(filter(None, [pokemon, backup_1, backup_2]))}",
-            ephemeral=True
-        )
+            # Sends Message letting them know it was successful
+            await interaction.response.send_message(
+                f"Removed Pick {self.index + 1}: {', '.join(filter(None, [pokemon, backup_1, backup_2]))}",
+                ephemeral=True
+            )
 
 
 @app_commands.command(name="view_picks",description="View Your Picks Privately and Remove old Picks")
@@ -210,6 +220,7 @@ async def view_picks(interaction: Interaction):
     channel = Draft.pickData.get(channel_id, None)
     if not channel:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+        return
 
     # Team of the person making the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
@@ -222,15 +233,16 @@ async def view_picks(interaction: Interaction):
     # get the picks of the team
     picks = getPicks(channel_id, team)
 
-    embed = leave_picks_embed(team, picks)
+    embed = picks_embed(team, picks)
 
     # Build button UI for removing picks
-    view = RemovePickView(picks, channel_id, team)
+    view = RemovePickView(channel_id, team)
 
     await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
     # message = await interaction.response.send_message(embed=embed, view=view)
 
     sent_message = await interaction.original_response()
+    view.message = sent_message
     add_active_message(channel_id, team, sent_message)
 
 

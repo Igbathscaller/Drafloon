@@ -123,7 +123,7 @@ def getTurn(channel_id: str):
 timers = {}
 
 # Starting Timer
-async def start_timer(interaction: Interaction, timeout = 10):
+async def start_timer(interaction: Interaction, timeout = 180):
     
     channel_id = str(interaction.channel_id)
 
