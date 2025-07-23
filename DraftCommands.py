@@ -389,22 +389,28 @@ async def auto_pick(interaction: Interaction):
     pickIndex = 0
 
     for pick in picks:
+        # Test Main
         success, result = await addToRoster(channel_id, pick["Main"], team, nextSlot, pointsLeft)
         pickIndex += 1
         if success:
             pointsLeft = result
             pokemon = pick["Main"]
             break
+        # if backup, test backup
         elif pick["Backup_1"]:
-            (success, result) = await addToRoster(channel_id, pick["Backup_1"], team, nextSlot, pointsLeft)
-            pointsLeft = result
-            pokemon = pick["Backup_1"]
-            break
+            success, result = await addToRoster(channel_id, pick["Backup_1"], team, nextSlot, pointsLeft)
+            if success:
+                pointsLeft = result
+                pokemon = pick["Backup_1"]
+                break
+        # if backup, test backup
         elif pick["Backup_2"]:
             (success, result) = await addToRoster(channel_id, pick["Backup_2"], team, nextSlot, pointsLeft)
-            pointsLeft = result
-            pokemon = pick["Backup_2"]
-            break
+            if success:
+                pointsLeft = result
+                pokemon = pick["Backup_2"]
+                break
+
     # Delete the pick after it has been utilized
     del picks[:pickIndex]
     print(picks)
@@ -424,11 +430,11 @@ async def auto_pick(interaction: Interaction):
 
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"Team {team}: {mentions} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"Team {team} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
-        await interaction.followup.send("", embed=embed)
+        await interaction.channel.send("", embed=embed)
     except Exception as e:
-        await interaction.followup.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.channel.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     await start_timer(interaction)    
