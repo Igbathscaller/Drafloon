@@ -9,7 +9,7 @@ import DraftCommands as Draft
 
 # adds pick to the roster
 def addPick(channel_id: str, team: str, main: str, 
-            backup: str | None = None, backup2: str | None = None, slot: int | None = None):
+            backup: str = None, backup2: str = None, slot: int = None):
     picks = Draft.pickData[channel_id]["Rosters"].get(team, None)
     if picks == None:
         Draft.pickData[channel_id]["Rosters"][team] = []
@@ -45,7 +45,7 @@ def getPicks(channel_id: str, team: str) -> list:
 @app_commands.autocomplete(pokemon=Draft.pokemon_autocomplete, backup_1=Draft.pokemon_autocomplete, backup_2=Draft.pokemon_autocomplete)
 @app_commands.guilds()
 async def leave_pick(interaction: Interaction, pokemon: str, 
-                     backup_1: str | None = None, backup_2: str | None = None, slot: int | None = None):
+                     backup_1: str = None, backup_2: str = None, slot: int = None):
     
     # Check if it is actual pokemon (in the list of choices)
     if pokemon not in Draft.pokemon_names:
