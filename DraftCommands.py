@@ -386,6 +386,7 @@ async def auto_pick(interaction: Interaction):
     nextSlot, pointTotal = ggSheet.getNextSlot(spreadSheet, channel_id, team)
     pointsLeft = ggSheet.pointDict[channel_id]["Total"] - pointTotal
     pokemon = None
+    pickIndex = 0
 
     for pick in picks:
         success, result = await addToRoster(channel_id, pick["Main"], team, nextSlot, pointsLeft)
