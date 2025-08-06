@@ -22,11 +22,16 @@ Draft Automation Bot
 ### Things to Implement
 - Locks for taking turns (optional/low prio) 
 It seems pretty hard to sync up, but it is theoretically possible for players on the same team to draft at the same time.
-- Left Picks should probably limited to max 10 with an optional 2 backups in case of snipe.
-- Need to add a way to delete left picks
-- Maybe a way to also edit the left picks or replace them, so they don't need to delete and keep readding them
-- Needs to add the left picks when skipped or give players an option to set a timer for when to do a left pick
 - Probably a way to remove a player from the skipped list in case of manual draft.
+- When adding sheet, start it as paused
+- Make the turn count number of skilled players + number of pokemon drafted (0-indexed)
+- Allow the code to be do a draft order that is randomized based on roster code.
+- Allow mass player adds when adding players. Needs up to 9 additional players.
+
+### Important Secondary
+- Link google sheets docs to make comparisons easier and allow others to set up.
+- (risky so test in test server before implementing) introduce automatic creation and deletion of scheduling channels.
+
 
 ## Things that were successfully implemented
 #### Discord Interaction
