@@ -30,6 +30,9 @@ def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadPointsAndDrafted(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData.get(channel_id, {}).get("Player Count", 0))
     Draft.loadPicks(channel_id)
+    if channel_id in ChannelServer.channelData:
+        ChannelServer.channelData[channel_id]["Turn"] = len(ggSheet.draftedData[channel_id]) + len(ChannelServer.channelData[channel_id]["Skipped"])
+
 
 # region: debug version
 # def handle_spreadsheet_update_debug(channel_id, sheet_key):
@@ -63,6 +66,7 @@ for channel_id, channel in ChannelServer.channelData.items():
     ggSheet.loadPointsAndDrafted(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
     Draft.loadPicks(channel_id)
+    ChannelServer.channelData[channel_id]["Turn"] = len(ggSheet.draftedData[channel_id]) + len(ChannelServer.channelData[channel_id]["Skipped"])
 
 # debug
 # print(ChannelServer.channelData)
@@ -85,9 +89,7 @@ async def on_ready():
         client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.getPlayers,       guild=guild)
-        client.tree.add_command(ChannelServer.pause_draft,      guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.resume_draft,     guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.reload_draft,     guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.draft_control,    guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.view_timer,       guild=guild)
 
         # Draft Commands

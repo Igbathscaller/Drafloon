@@ -250,7 +250,26 @@ async def getPlayers(interaction: Interaction):
 timers = {}
 end_times = {}
 
-@app_commands.command(name="pause_draft", description="Pause drafting and timers in this channel")
+
+@app_commands.command(name="draft_control", description="Control drafting: pause, resume, or refresh")
+@app_commands.describe(action="Action to perform on the draft")
+@app_commands.choices(action=[
+    app_commands.Choice(name="Pause Draft", value="pause"),
+    app_commands.Choice(name="Resume Draft", value="resume"),
+    app_commands.Choice(name="Refresh Draft", value="refresh"),
+])
+async def draft_control(interaction: Interaction, action: app_commands.Choice[str]):
+    if action.value == "pause":
+        await pause_draft(interaction)
+    elif action.value == "resume":
+        await resume_draft(interaction)
+    elif action.value == "refresh":
+        await refresh_draft(interaction)
+    else:
+        await interaction.response.send_message("Invalid action.", ephemeral=True)
+
+
+# @app_commands.command(name="pause_draft", description="Pause drafting and timers in this channel")
 async def pause_draft(interaction: Interaction):
 
     if not interaction.user.guild_permissions.manage_messages:
@@ -274,7 +293,7 @@ async def pause_draft(interaction: Interaction):
     else:
         await interaction.response.send_message("No Sheet Associated with channel.")
 
-@app_commands.command(name="resume_draft", description="Resume drafting and timers in this channel")
+# @app_commands.command(name="resume_draft", description="Resume drafting and timers in this channel")
 async def resume_draft(interaction: Interaction):
 
     if not interaction.user.guild_permissions.manage_messages:
@@ -295,8 +314,8 @@ async def resume_draft(interaction: Interaction):
     else:
         await interaction.response.send_message("Channel not initialized.", ephemeral=True)
 
-@app_commands.command(name="reload_draft", description="Reload and reimport the data in the draft")
-async def reload_draft(interaction: Interaction):
+# @app_commands.command(name="reload_draft", description="Reload and reimport the data in the draft")
+async def refresh_draft(interaction: Interaction):
 
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
@@ -317,7 +336,7 @@ async def reload_draft(interaction: Interaction):
         if module_callback:
             module_callback(channel_id, channel["spreadsheet"])
 
-        await interaction.response.send_message("Drafting has resumed.", ephemeral=True)
+        await interaction.response.send_message("The Draft has been refreshed.", ephemeral=True)
     else:
         await interaction.response.send_message("Channel not initialized.", ephemeral=True)
 

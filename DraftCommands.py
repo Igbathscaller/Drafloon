@@ -156,7 +156,7 @@ def end_timer(channel_id: str):
         del ChannelServer.end_times[channel_id]
 
 # Stop Timer Command
-@app_commands.command(name="stop_timer",description="Skip the Current Player (mod)")
+@app_commands.command(name="stop_timer",description="Stops the timer (mod)")
 @app_commands.guilds()
 async def stop_timer(interaction: Interaction):
     if not interaction.user.guild_permissions.manage_messages:

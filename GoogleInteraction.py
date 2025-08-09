@@ -49,7 +49,7 @@ def loadPointsAndDrafted(channelID:str):
     # B2:D is Pokemon + their Points
     # F1 is the total (this could probably done better)
     # f'B6:{rowcol_to_a1(6 + 11, 16)}' is the full roster
-    calls = ['Draft Code!B2:D', 'Draft Code!F1', f'Roster Code!B6:{rowcol_to_a1(6 + 11, 16)}']
+    calls = ['Draft Code!B2:D', 'Draft Code!F1', f'Roster Code!B6:{rowcol_to_a1(6 + 11, 16 + 1)}']
 
     # get the response (the output type is slightly different)
     response = sheet.values_batch_get(calls)
@@ -71,7 +71,7 @@ def loadPointsAndDrafted(channelID:str):
 
     # Load Drafted Data
     roster_cells = recieved[2].get('values', [])
-    drafted = {cell for row in roster_cells for cell in row if cell}
+    drafted = {cell for row in roster_cells for cell in row if cell and cell != "-"}
     draftedData[channelID] = drafted
 
 
