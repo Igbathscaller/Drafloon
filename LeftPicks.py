@@ -5,7 +5,7 @@ import asyncio
 import ChannelServer
 import DraftCommands as Draft
 
-#region: Adding Picks and Viewing them
+#region: Adding Picks
 
 # adds pick to the roster
 def addPick(channel_id: str, team: str, main: str, 
@@ -78,13 +78,16 @@ async def leave_pick(interaction: Interaction, pokemon: str,
 
     # Add the pick to the team
     addPick(channel_id, team, pokemon, backup_1, backup_2, slot)
+    log_pick(str(interaction.user.id), channel_id, "left", [pokemon, backup_1, backup_2])
 
     await interaction.response.send_message(f"You left the following pick(s): {', '.join(filter(None, [pokemon, backup_1, backup_2]))}", ephemeral=True)
 
     # update people viewing picks
     await update_leave_pick_messages(channel_id, team)
 
+# endregion
 
+#region: Viewing/Removing picks
 # Track active messages by channel_id -> team -> list of messages
 active_messages = {}
 locks = {}
@@ -197,6 +200,7 @@ class RemovePickButton(Button):
             backup_1 = removed_pick.get("Backup_1")
             backup_2 = removed_pick.get("Backup_2")
 
+            log_pick(str(interaction.user.id), self.channel_id, "removed", [pokemon, backup_1, backup_2])
             # Saves Picks to the Json.
             Draft.savePicksJson()
 
@@ -245,5 +249,54 @@ async def view_picks(interaction: Interaction):
     view.message = sent_message
     add_active_message(channel_id, team, sent_message)
 
+@app_commands.command(name="view_picks_mod",description="View Your Picks (Mod Abuse Ver.)")
+@app_commands.guilds()
+async def view_picks_mod(interaction: Interaction, team: str):
+
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+
+    # Checks if the channel has been initialized
+    channel = Draft.pickData.get(channel_id, None)
+    if not channel:
+        await interaction.response.send_message("This Channel has no Associated Spreadsheet", ephemeral=True)
+        return
+
+    # Team of the person making the Draft Pick
+    roster = ChannelServer.channelData[channel_id]["Rosters"].get(team)
+
+    # Check Team
+    if roster == None:
+        await interaction.response.send_message("Not a valid team", ephemeral=True)
+        return
+
+    # get the picks of the team
+    picks = getPicks(channel_id, team)
+
+    embed = picks_embed(team, picks)
+
+    # Build button UI for removing picks
+    view = RemovePickView(channel_id, team)
+
+    await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+    # message = await interaction.response.send_message(embed=embed, view=view)
+
+    sent_message = await interaction.original_response()
+    view.message = sent_message
+    add_active_message(channel_id, team, sent_message)
 
 #endregion
+
+#region: Logging Picks
+
+log_file = "log.txt"
+
+def log_pick(user_id: str, channel_id: str, action: str, names: list):
+    names_str = ", ".join(filter(None, names))
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(f"{channel_id} {user_id} {action} {names_str}\n")
+
+# endregion

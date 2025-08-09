@@ -30,7 +30,7 @@ def initializeChannel(channel_id, playerCount):
         "spreadsheet": "",
         "Player Count": playerCount,
         "Turn": 0,
-        "Paused" : False,
+        "Paused" : True,
         "Skipped": [],
         "Rosters": {},
         "Players": {}
@@ -41,7 +41,6 @@ module_callback = None
 def register_module_callback(callback):
     global module_callback
     module_callback = callback
-
 
 
 # Helper Function for Draft Commands

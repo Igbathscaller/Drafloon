@@ -96,8 +96,10 @@ async def on_ready():
         client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
         
         # Pick Commands
-        client.tree.add_command(Picks.leave_pick,   guild=guild)
-        client.tree.add_command(Picks.view_picks,   guild=guild)
+        client.tree.add_command(Picks.leave_pick,       guild=guild)
+        client.tree.add_command(Picks.view_picks,       guild=guild)
+        client.tree.add_command(Picks.view_picks_mod,   guild=guild) # Has Manage Message Perm
+
 
 
         synced = await client.tree.sync(guild=guild)
