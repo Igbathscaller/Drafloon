@@ -33,7 +33,8 @@ def initializeChannel(channel_id, playerCount):
         "Paused" : True,
         "Skipped": [],
         "Rosters": {},
-        "Players": {}
+        "Players": {},
+        "TeamNames": {}
     }
 
 # Allows other modules to know when the Json has been updated

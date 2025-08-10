@@ -8,6 +8,7 @@ import ChannelServer
 import DraftCommands as Draft
 import GoogleInteraction as ggSheet
 import LeftPicks as Picks
+import Scheduling
 
 
 # Import Neccessary Variables and Data
@@ -102,6 +103,11 @@ async def on_ready():
         client.tree.add_command(Picks.view_picks,       guild=guild)
         client.tree.add_command(Picks.view_picks_mod,   guild=guild) # Has Manage Message Perm
 
+        # Scheduling Commands
+        client.tree.add_command(Scheduling.save_schedule_sheet, guild=guild) # Has Manage Channel Perms
+        client.tree.add_command(Scheduling.update_schedule,     guild=guild) # Has Manage Channel Perms
+        client.tree.add_command(Scheduling.schedulingChannels,  guild=guild) # Has Manage Channel Perms
+        client.tree.add_command(Scheduling.deleteChannels,      guild=guild) # Has Manage Channel Perms
 
 
         synced = await client.tree.sync(guild=guild)
