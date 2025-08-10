@@ -5,3 +5,4 @@ __pycache__/
 ChannelServer.json
 Picks.json
 log.txt
+schedule_data.json
