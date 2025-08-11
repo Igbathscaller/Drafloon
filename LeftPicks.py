@@ -131,7 +131,7 @@ async def update_leave_pick_messages(channel_id: str, team: str):
 def picks_embed(team: str, teamName: str, picks: list) -> Embed:
     
     embed = Embed(
-        title=f"({team}) {teamName}",
+        title=f"{teamName}",
         color=Color.brand_green()
     )
     if picks:

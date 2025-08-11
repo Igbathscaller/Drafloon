@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands
+from discord import app_commands
 import time
 
 import ChannelServer
@@ -90,22 +91,21 @@ async def on_ready():
     
         # Related to saving and storing player and sheet information in the roster.
         client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
-        # client.tree.add_command(ChannelServer.removeSpreadsheet,guild=guild) # Has Manage Message Perm
-        # client.tree.add_command(ChannelServer.getspreadsheet,   guild=guild) 
         client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.addSkipped,       guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.getPlayers,       guild=guild)
+        client.tree.add_command(ChannelServer.getPlayers,       guild=guild) # PLAYER SIDE
         client.tree.add_command(ChannelServer.draft_control,    guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.view_timer,       guild=guild)
+        client.tree.add_command(ChannelServer.turn_info,        guild=guild) # PLAYER SIDE
 
         # Draft Commands
-        client.tree.add_command(Draft.draft,        guild=guild)
+        client.tree.add_command(Draft.draft,        guild=guild) # PLAYER SIDE
         client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
         
         # Pick Commands
-        client.tree.add_command(Picks.leave_pick,       guild=guild)
-        client.tree.add_command(Picks.view_picks,       guild=guild)
+        client.tree.add_command(Picks.leave_pick,       guild=guild) # PLAYER SIDE
+        client.tree.add_command(Picks.view_picks,       guild=guild) # PLAYER SIDE
         client.tree.add_command(Picks.view_picks_mod,   guild=guild) # Has Manage Message Perm
 
         # Scheduling Commands
@@ -120,6 +120,18 @@ async def on_ready():
         print(f"Synced {len(synced)} command(s) to guild {guild.id}")
     except Exception as e:
         print(f"Error syncing commands: {e}")
+
+# cooldown error
+@client.tree.error
+async def on_app_command_error(interaction, error):
+    if isinstance(error, app_commands.errors.CommandOnCooldown):
+        await interaction.response.send_message(
+            f"You're on cooldown! Try again in {round(error.retry_after, 1)} seconds.",
+            ephemeral=True
+        )
+    else:
+        # other error handling or re-raise
+        raise error
 
 
 try:

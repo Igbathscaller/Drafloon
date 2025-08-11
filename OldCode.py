@@ -338,3 +338,22 @@
 #     spreadSheet = spreadDict[channel_id]
 
 #     draftedData[channel_id] = readFullRoster(spreadSheet, 16, 11)
+
+# @app_commands.command(name="view_timer", description="Check how much time remains before the auto-pick")
+# @app_commands.guilds() 
+# async def view_timer(interaction: Interaction):
+#     channel_id = str(interaction.channel_id)
+#     end_time = end_times.get(channel_id, None)
+
+#     if end_time is None:
+#         await interaction.response.send_message("No timer is currently running.", ephemeral=True)
+#         return
+
+#     # Convert monotonic-based end time to Unix timestamp
+#     now_real = time.time()
+#     monotonic = time.monotonic()
+#     diff = end_time - monotonic
+
+#     unix_timestamp = int(now_real + diff)
+#     await interaction.response.send_message(f"Timer ends <t:{unix_timestamp}:R>", ephemeral=True)
+

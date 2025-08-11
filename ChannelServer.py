@@ -4,9 +4,9 @@ import time
 from discord import Interaction,Member,Embed,Color
 from discord import app_commands
 from re import search
+from collections import Counter
 
-### JSON Utility Functions
-
+# region: JSON Utility Functions
 def loadJson():
     try:
         with open("ChannelServer.json", "r") as f:
@@ -43,21 +43,38 @@ def register_module_callback(callback):
     global module_callback
     module_callback = callback
 
+# endregion
 
-# Helper Function for Draft Commands
+# region: Helper Function for Draft Commands
 def getTeam(channel_id: str, user_id: str):
     channel = channelData.get(channel_id, None)
     if channel == None:
         return None
     return channel["Players"].get(user_id, None)
 
-def getSheet(channel_id: str):
-    channel = channelData.get(channel_id, None)
-    if channel == None:
-        return None
-    return channel["spreadsheet"]
+# Check whose turn it is (This could be moved into Channel Server or GG Sheets)
+def getTurn(channel_id: str):
+    '''
+    returns: (str name, int points): 
+        Round (int)
+        Team (int) 
+    '''
+    channel = channelData[channel_id]
 
+    turn = channel.get("Turn", -1)
+    playerCount = channel.get("Player Count", 1)
+    
+    # Turns 0-15 are round 1
+    round = turn // playerCount
+    
+    # the reverse turns are odd (since it is 0-indexed)
+    if round % 2:
+        return (round, playerCount - turn % playerCount)
+    # On the even turns. 
+    else:
+        return (round, turn % playerCount + 1)
 
+# endregion
 
 # region: Slash Commands for ChannelServer management
 
@@ -101,7 +118,7 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
 # Config Funtion
 # Needs Permission to Run
 
-@app_commands.command(name="add_player", description="Add a Discord User to a Team")
+@app_commands.command(name="player_add", description="Add a Discord User to a Team")
 @app_commands.guilds()
 async def setPlayerRoster(  interaction: Interaction, team: str, member: Member, 
                             member2: Member = None,
@@ -158,7 +175,7 @@ async def setPlayerRoster(  interaction: Interaction, team: str, member: Member,
 # Check if player is on team
 # Removes player from team if on a team
 
-@app_commands.command(name="remove_player", description="Remove a Discord User from a Team")
+@app_commands.command(name="player_remove", description="Remove a Discord User from a Team")
 @app_commands.guilds()
 async def removePlayer(interaction: Interaction, member: Member):
     if not interaction.user.guild_permissions.manage_messages:
@@ -186,9 +203,39 @@ async def removePlayer(interaction: Interaction, member: Member):
 
     await interaction.response.send_message(msg, ephemeral=True)
 
+# This is for fixing/matching the skipped teams/turn in case of a manual update/change.
+@app_commands.command(name="skipped_teams_add", description="Add a Discord User to a Team")
+@app_commands.guilds()
+async def addSkipped(  interaction: Interaction, team: str, 
+                            team2: str = None,
+                            team3: str = None,
+                            team4: str = None,
+                            team5: str = None,
+                            team6: str = None,
+                            team7: str = None,
+                            team8: str = None,
+                          ):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
 
+    channel_id = str(interaction.channel_id)
 
-@app_commands.command(name="view_players", description="Get all the players involved")
+    if channel_id not in channelData:
+        await interaction.response.send_message("No Sheet Associated with channel.", ephemeral=True)
+        return
+
+    toBeSkipped = [skip for skip in [team, team2, team3, team4, team5, team6, team7, team8] if skip]
+
+    channelData[channel_id]["Skipped"] += toBeSkipped
+    channelData[channel_id]["Turn"] += len(toBeSkipped)
+
+    saveJson()
+
+    await interaction.response.send_message(f"added Teams: {", ".join(toBeSkipped)} to skipped list", ephemeral=True)
+
+@app_commands.command(name="players", description="See all the Player's Involved")
+@app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
 @app_commands.guilds()
 async def getPlayers(interaction: Interaction):
     channel_id = str(interaction.channel_id)
@@ -196,6 +243,7 @@ async def getPlayers(interaction: Interaction):
 
     if channel_id not in channelData:
         await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
+        return
     
     rosters = channelData[channel_id].get("Rosters", {})
     names = channelData[channel_id].get("TeamNames", {})
@@ -225,7 +273,7 @@ async def getPlayers(interaction: Interaction):
         else:
             embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
 
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    await interaction.response.send_message(embed=embed)
 
 # These are the active skip timers in the Draft Commands.
 timers = {}
@@ -373,23 +421,58 @@ async def getspreadsheet(interaction: Interaction):
 
 # endregion
 
-@app_commands.command(name="view_timer", description="Check how much time remains before the auto-pick")
-@app_commands.guilds()  # Optional: specify guilds if needed
-async def view_timer(interaction: Interaction):
+@app_commands.command(name="turn_info", description="Shows current turn, draft timer, and skipped players")
+@app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
+@app_commands.guilds() 
+async def turn_info(interaction: Interaction):
     channel_id = str(interaction.channel_id)
-    end_time = end_times.get(channel_id, None)
+    channel_name = str(interaction.channel)
 
-    if end_time is None:
-        await interaction.response.send_message("No timer is currently running.", ephemeral=True)
+    if channel_id not in channelData:
+        await interaction.response.send_message(f"#`{channel_name}` has no associated draft")
         return
+    
+    channel = channelData.get(channel_id)
+    teamNames = channel["TeamNames"]
 
-    # Convert monotonic-based end time to Unix timestamp
-    now_real = time.time()
-    monotonic = time.monotonic()
-    diff = end_time - monotonic
+    # TIMER
+    end_time = end_times.get(channel_id, None)
+    if end_time is not None:
+        now_real = time.time()
+        monotonic = time.monotonic()
+        diff = end_time - monotonic
+        unix_timestamp = int(now_real + diff)
+        timer_text = f"Timer ends <t:{unix_timestamp}:R>"
+    else:
+        timer_text = "No timer is currently running."
 
-    if diff <= 0:
-        return "The timer has expired."
+    # TURN
+    round,turn = getTurn(channel_id)  # Assuming you store this somewhere
+    if round != -1:
+        turn = str(turn)
+        teamName = teamNames.get(turn, "No Team Name")
+        turn_text = f"Round {round+1}; It's **{teamName}**'s turn."
+    else:
+        turn_text = "No active turn."
 
-    unix_timestamp = int(now_real + diff)
-    await interaction.response.send_message(f"Timer ends <t:{unix_timestamp}:R>", ephemeral=True)
+    # --- SKIPPED PLAYERS ---
+    skipped = channel["Skipped"]
+    
+    if skipped:
+        skippedTeams = []
+        skippedDict = Counter(skipped)
+        for team, num in skippedDict.items():
+            teamName = teamNames.get(team, "No Team Name")
+            skippedTeams.append(f"{teamName} has {num} skip(s)")
+
+        skipped_text = "\n".join(skippedTeams)
+    else:
+        skipped_text = "No Skipped players"
+
+    # --- COMBINE ---
+    embed = Embed(title="Turn Information", color=Color.blue())
+    embed.add_field(name="Skip Timer", value=timer_text, inline=False)
+    embed.add_field(name="Current Round/Turn", value=turn_text, inline=False)
+    embed.add_field(name="Skipped Players (they may make up their turn whenever)", value=skipped_text, inline=False)
+
+    await interaction.response.send_message(embed=embed)

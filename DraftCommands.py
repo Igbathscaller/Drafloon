@@ -95,28 +95,6 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
 
     return [app_commands.Choice(name=name, value=name) for name in results]
 
-# Check whose turn it is (This could be moved into Channel Server or GG Sheets)
-def getTurn(channel_id: str):
-    '''
-    returns: (str name, int points): 
-        name (str): The Pokémon's name.
-        points (int): The point value of the Pokémon.
-    '''
-    channel = ChannelServer.channelData[channel_id]
-
-    turn = channel["Turn"]
-    playerCount = channel["Player Count"]
-    
-    # Turns 0-15 are round 1
-    round = turn // playerCount
-    
-    # the reverse turns are odd (since it is 0-indexed)
-    if round % 2:
-        return (round, playerCount - turn % playerCount)
-    # On the even turns. 
-    else:
-        return (round, turn % playerCount + 1)
-
 
 #region: Timer Related Functions
 
@@ -185,7 +163,7 @@ def skip(channel_id: str) -> str:
     if not channel:
         return None
     else:
-        team = getTurn(channel_id)[1]
+        team = ChannelServer.getTurn(channel_id)[1]
         channel["Skipped"].append(team)
         channel["Turn"]+=1
         ChannelServer.saveJson()
@@ -312,7 +290,7 @@ async def draft(interaction: Interaction, pokemon: str):
     ## Check if allowed to draft
     # Turn gives you the team depending on turn number (aka whose turn it is)
     team = int(team)
-    (round, turn) = getTurn(channel_id) 
+    (round, turn) = ChannelServer.getTurn(channel_id) 
     # There is slightly different incrementing if the player is retaking a skipped turn
     skipped = False
 
@@ -377,7 +355,7 @@ async def auto_pick(interaction: Interaction):
         return
 
     # Collect the team and turn
-    (round, team) = getTurn(channel_id)
+    (round, team) = ChannelServer.getTurn(channel_id)
 
     picks = pickList["Rosters"].get(str(team), None)
 
