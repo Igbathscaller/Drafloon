@@ -28,14 +28,14 @@ client = commands.Bot(command_prefix="!", intents=intents)
 # Handles updating the left picks
 def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadSheet(channel_id, sheet_key)
-    ggSheet.loadPointsAndDrafted(channel_id)
+    ChannelServer.channelData[channel_id]["TeamNames"] = ggSheet.loadPointsDraftedTeams(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData.get(channel_id, {}).get("Player Count", 0))
     Draft.loadPicks(channel_id)
     if channel_id in ChannelServer.channelData:
         ChannelServer.channelData[channel_id]["Turn"] = len(ggSheet.draftedData[channel_id]) + len(ChannelServer.channelData[channel_id]["Skipped"])
+    ChannelServer.saveJson()
 
-
-# region: debug version
+# region: debug with timer version
 # def handle_spreadsheet_update_debug(channel_id, sheet_key):
 #     start = time.perf_counter()
 #     ggSheet.loadSheet(channel_id, sheet_key)
@@ -43,7 +43,7 @@ def handle_spreadsheet_update(channel_id, sheet_key):
 #     print(f"loadSheet took {end - start:.6f} seconds", ggSheet.spreadDict)
 
 #     start = time.perf_counter()
-#     ggSheet.loadPointsAndDrafted(channel_id)
+#     ggSheet.loadPointsDraftedTeams(channel_id)
 #     end = time.perf_counter()
 #     print(f"loadPoints took {end - start:.6f} seconds")
 
@@ -64,19 +64,23 @@ ChannelServer.register_module_callback(handle_spreadsheet_update)
 for channel_id, channel in ChannelServer.channelData.items():
 
     ggSheet.loadSheet(channel_id, channel["spreadsheet"])
-    ggSheet.loadPointsAndDrafted(channel_id)
+    ChannelServer.channelData[channel_id]["TeamNames"] = ggSheet.loadPointsDraftedTeams(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData[channel_id]["Player Count"])
     Draft.loadPicks(channel_id)
     ChannelServer.channelData[channel_id]["Turn"] = len(ggSheet.draftedData[channel_id]) + len(ChannelServer.channelData[channel_id]["Skipped"])
+    
+ChannelServer.saveJson()
 
-# debug
+# region: debug
 # print(ChannelServer.channelData)
 # print(ggSheet.spreadDict)
 # print(ggSheet.pointDict)
 # print(ggSheet.draftedData)
 # print(ggSheet.writeCellDict)
 # print(Draft.pickData)
+# endregion
 
+# Starts the Bot and it is the list of all commands.
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
@@ -117,18 +121,8 @@ async def on_ready():
         print(f"Error syncing commands: {e}")
 
 
-# @client.event
-# async def close():
-#     print("Bot is shutting down... Saving JSON data.")
-#     with open("ChannelServer.json", "w") as f:
-#         json.dump(ChannelServer.channelData, f, indent=4)
-#     await super(commands.Bot, client).close()
-
 try:
     client.run(Token)
 finally:
     print("Shutting Down...")
-    # print("Saving data before shutdown...")
-    # with open("ChannelServer.json", "w") as f:
-    #     json.dump(ChannelServer.channelData, f, indent=4)
 

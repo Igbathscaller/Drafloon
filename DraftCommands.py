@@ -221,10 +221,11 @@ async def skip_player(interaction: Interaction):
         # In case the team has no players or has not been initialized
         skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
         mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-        await interaction.response.send_message(f"Team {team}: {mentions} Skipped.")
+        teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
+
+        await interaction.response.send_message(f"{teamName} (pick {team}): {mentions} Skipped.")
         # Start Timer at the end of each action. Only activate timer if we know it'll work.
         await start_timer(interaction)
-
 
 #endregion
 
@@ -306,6 +307,8 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.response.send_message("You are not on a Team", ephemeral=True)
         return
     
+    teamName = channel["TeamNames"].get(team, "No Team Name")
+
     ## Check if allowed to draft
     # Turn gives you the team depending on turn number (aka whose turn it is)
     team = int(team)
@@ -320,7 +323,8 @@ async def draft(interaction: Interaction, pokemon: str):
         if team in channel["Skipped"]:
             skipped = True
         else:
-            await interaction.response.send_message(f"It's not your turn! It's Team {turn}'s turn.")
+            turnName = channel["TeamNames"].get(team, "No Team Name")
+            await interaction.response.send_message(f"It's not your turn! It's {turnName}'s turn.")
             return
     
     # Need to access gg sheets so we need thinking time
@@ -350,11 +354,11 @@ async def draft(interaction: Interaction, pokemon: str):
     
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
     except Exception as e:
-        await interaction.followup.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.followup.send(f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     await start_timer(interaction)

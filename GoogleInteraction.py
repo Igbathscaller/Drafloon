@@ -37,7 +37,7 @@ pointDict = {}
 draftedData = {}
 
 # Get Spreadsheets by key and adds points to the dictionary
-def loadPointsAndDrafted(channelID:str):
+def loadPointsDraftedTeams(channelID:str):
     # This is the removal if statement
     # If the spreadsheet doesn't exist in spreadDict, I want it cleared from pointDict
     if channelID not in spreadDict:
@@ -49,7 +49,7 @@ def loadPointsAndDrafted(channelID:str):
     # B2:D is Pokemon + their Points
     # F1 is the total (this could probably done better)
     # f'B6:{rowcol_to_a1(6 + 11, 16)}' is the full roster
-    calls = ['Draft Code!B2:D', 'Draft Code!F1', f'Roster Code!B6:{rowcol_to_a1(6 + 11, 16 + 1)}']
+    calls = ['Draft Code!B2:D', 'Draft Code!F1', f'Roster Code!B6:{rowcol_to_a1(6 + 11, 16 + 1)}', f'Roster Code!B3:Q3']
 
     # get the response (the output type is slightly different)
     response = sheet.values_batch_get(calls)
@@ -73,6 +73,11 @@ def loadPointsAndDrafted(channelID:str):
     roster_cells = recieved[2].get('values', [])
     drafted = {cell for row in roster_cells for cell in row if cell and cell != "-"}
     draftedData[channelID] = drafted
+
+    # return Team names
+    teamNames = recieved[3].get('values', [])[0]
+    teamNamesDict = {str(i + 1): name for i, name in enumerate(teamNames)}
+    return(teamNamesDict)
 
 
 # Initialize Update Dictionary

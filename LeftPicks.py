@@ -80,6 +80,7 @@ async def leave_pick(interaction: Interaction, pokemon: str,
     addPick(channel_id, team, pokemon, backup_1, backup_2, slot)
     log_pick(str(interaction.user.id), channel_id, "left", [pokemon, backup_1, backup_2])
 
+
     await interaction.response.send_message(f"You left the following pick(s): {', '.join(filter(None, [pokemon, backup_1, backup_2]))}", ephemeral=True)
 
     # update people viewing picks
@@ -113,9 +114,12 @@ async def get_remove_lock(channel_id: str, team: str) -> asyncio.Lock:
     locks[channel_id].setdefault(team, asyncio.Lock())
     return locks[channel_id][team]
 
+# teamName update
+
 async def update_leave_pick_messages(channel_id: str, team: str):
+    teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
     picks = getPicks(channel_id, team)
-    embed = picks_embed(team, picks)
+    embed = picks_embed(team, teamName, picks)
     messages = active_messages.get(channel_id, {}).get(team, [])
     view = RemovePickView(channel_id, team)
     for message in messages:
@@ -124,9 +128,10 @@ async def update_leave_pick_messages(channel_id: str, team: str):
         except Exception as e:
             print(f"Failed to update message {message.id}: {e}")
 
-def picks_embed(team: str, picks: list) -> Embed:
+def picks_embed(team: str, teamName: str, picks: list) -> Embed:
+    
     embed = Embed(
-        title=f"Team {team}",
+        title=f"({team}) {teamName}",
         color=Color.brand_green()
     )
     if picks:
@@ -228,6 +233,7 @@ async def view_picks(interaction: Interaction):
 
     # Team of the person making the Draft Pick
     team = ChannelServer.getTeam(channel_id, str(interaction.user.id))
+    teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
 
     # Check Team
     if not team:
@@ -237,7 +243,7 @@ async def view_picks(interaction: Interaction):
     # get the picks of the team
     picks = getPicks(channel_id, team)
 
-    embed = picks_embed(team, picks)
+    embed = picks_embed(team, teamName, picks)
 
     # Build button UI for removing picks
     view = RemovePickView(channel_id, team)
@@ -272,11 +278,13 @@ async def view_picks_mod(interaction: Interaction, team: str):
     if roster == None:
         await interaction.response.send_message("Not a valid team", ephemeral=True)
         return
+    
+    teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
 
     # get the picks of the team
     picks = getPicks(channel_id, team)
 
-    embed = picks_embed(team, picks)
+    embed = picks_embed(team, teamName, picks)
 
     # Build button UI for removing picks
     view = RemovePickView(channel_id, team)
