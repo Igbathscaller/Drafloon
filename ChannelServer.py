@@ -232,7 +232,7 @@ async def addSkipped(  interaction: Interaction, team: str,
 
     saveJson()
 
-    await interaction.response.send_message(f"added Teams: {", ".join(toBeSkipped)} to skipped list", ephemeral=True)
+    await interaction.response.send_message(f"added Teams: {', '.join(toBeSkipped)} to skipped list", ephemeral=True)
 
 @app_commands.command(name="players", description="See all the Player's Involved")
 @app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
