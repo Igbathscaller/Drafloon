@@ -28,10 +28,11 @@ client = commands.Bot(command_prefix="!", intents=intents)
 # Handles updating the left picks
 def handle_spreadsheet_update(channel_id, sheet_key):
     ggSheet.loadSheet(channel_id, sheet_key)
-    ChannelServer.channelData[channel_id]["TeamNames"] = ggSheet.loadPointsDraftedTeams(channel_id)
+    teamNames = ggSheet.loadPointsDraftedTeams(channel_id)
     ggSheet.loadWriteCells(channel_id, ChannelServer.channelData.get(channel_id, {}).get("Player Count", 0))
     Draft.loadPicks(channel_id)
     if channel_id in ChannelServer.channelData:
+        ChannelServer.channelData[channel_id]["TeamNames"] = teamNames
         ChannelServer.channelData[channel_id]["Turn"] = len(ggSheet.draftedData[channel_id]) + len(ChannelServer.channelData[channel_id]["Skipped"])
     ChannelServer.saveJson()
 
@@ -89,8 +90,8 @@ async def on_ready():
     
         # Related to saving and storing player and sheet information in the roster.
         client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.removeSpreadsheet,guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.getspreadsheet,   guild=guild) 
+        # client.tree.add_command(ChannelServer.removeSpreadsheet,guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.getspreadsheet,   guild=guild) 
         client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.getPlayers,       guild=guild)

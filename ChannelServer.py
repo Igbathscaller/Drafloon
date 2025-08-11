@@ -32,7 +32,7 @@ def initializeChannel(channel_id, playerCount):
         "Turn": 0,
         "Paused" : True,
         "Skipped": [],
-        "Rosters": {},
+        "Rosters": {str(i): [] for i in range(1, playerCount + 1)},
         "Players": {},
         "TeamNames": {}
     }
@@ -59,7 +59,7 @@ def getSheet(channel_id: str):
 
 
 
-### Slash Commands for ChannelServer management
+# region: Slash Commands for ChannelServer management
 
 # Config Function
 # Needs Permission to use
@@ -96,50 +96,22 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
 
     await interaction.followup.send(f"Spreadsheet `{spreadsheet_url}` has been linked to #`{channel_name}`", ephemeral=True)
 
-
-@app_commands.command(name="remove_sheet", description="Removes the sheet and deletes associate information")
-@app_commands.guilds()
-async def removeSpreadsheet(interaction: Interaction):
-    if not interaction.user.guild_permissions.manage_messages:
-        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
-        return
-
-    await interaction.response.defer(ephemeral=True)
-
-    channel_id = str(interaction.channel_id)
-    channel_name = str(interaction.channel)
-
-    if channel_id in channelData:
-        del channelData[channel_id]
-        saveJson()
-
-    # Updates other modules, Takes longer now that I'm adding more functions
-    if module_callback:
-        module_callback(channel_id, None)
-
-    await interaction.followup.send(f"#`{channel_name}` has been reset", ephemeral=True)
-
-
-
-@app_commands.command(name="get_sheet", description="Get Sheet name")
-@app_commands.guilds()
-async def getspreadsheet(interaction: Interaction):
-    channel_id = str(interaction.channel_id)
-    channel_name = str(interaction.channel)
-
-    if channel_id not in channelData:
-        msg = f"#`{channel_name}` has no linked spreadsheet"
-    else:
-        msg = f"#`{channel_name}` is linked to `{channelData[channel_id]['spreadsheet']}`"
-
-    await interaction.response.send_message(msg, ephemeral=True)
+# endregion
 
 # Config Funtion
 # Needs Permission to Run
 
 @app_commands.command(name="add_player", description="Add a Discord User to a Team")
 @app_commands.guilds()
-async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
+async def setPlayerRoster(  interaction: Interaction, team: str, member: Member, 
+                            member2: Member = None,
+                            member3: Member = None,
+                            member4: Member = None,
+                            member5: Member = None,
+                            member6: Member = None,
+                            member7: Member = None,
+                            member8: Member = None,
+                          ):
     if not interaction.user.guild_permissions.manage_messages:
         await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
         return
@@ -150,31 +122,35 @@ async def setPlayerRoster(interaction: Interaction, member: Member, team: str):
     if channel_id not in channelData:
         await interaction.response.send_message("No Sheet Associated with channel.", ephemeral=True)
         return
+    teamName = channelData[channel_id]["TeamNames"].get(team,"No Team Name")
 
+    members = [m for m in [member, member2, member3, member4, member5, member6, member7, member8] if m]
 
-    if channelData[channel_id]["Players"].get(user_id, None) == team:
-        # If it player is already the roster member
-        msg = f"Player {member.display_name} is already on Team {team}."
-    
-    elif channelData[channel_id]["Players"].get(user_id, None) == None:
-        # if the player is not part of any roster
-        channelData[channel_id]["Players"][user_id] = team
-        channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
+    msgs = []
+    for member in members:
+        user_id = str(member.id)
+        if channelData[channel_id]["Players"].get(user_id) == team:
+            # If it player is already the roster member
+            msgs.append(f"Player: {member.display_name} is already on `{teamName}`.")
+        elif channelData[channel_id]["Players"].get(user_id) == None:
+            # if the player is not part of any roster
+            channelData[channel_id]["Players"][user_id] = team
+            channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
-        msg = f"Player {member.display_name} added to Team {team}."
+            msgs.append(f"Player: {member.display_name} added to `{teamName}`.")
+        else:
+            # if the player is part of another roster
+            oldTeam = channelData[channel_id]["Players"][user_id]
+            oldTeamName = channelData[channel_id]["TeamNames"].get(oldTeam,"No Team Name")
+            channelData[channel_id]["Players"][user_id] = team
+            channelData[channel_id]["Rosters"][oldTeam].remove(user_id)
+            channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
 
-    else:
-        # if the player is part of another roster
-        oldTeam = channelData[channel_id]["Players"][user_id]
-        channelData[channel_id]["Players"][user_id] = team
-        channelData[channel_id]["Rosters"][oldTeam].remove(user_id)
-        channelData[channel_id]["Rosters"].setdefault(team, []).append(user_id)
-
-        msg = f"Player {member.display_name} moved from Team {oldTeam} to Team {team}."
+            msgs.append(f"Player: {member.display_name} moved from `{oldTeamName}` to `{teamName}`.")
 
     saveJson()
 
-    await interaction.response.send_message(msg, ephemeral=True)
+    await interaction.response.send_message("\n".join(msgs), ephemeral=True)
 
 # Config Funtion
 # Needs Permission to Run
@@ -222,6 +198,8 @@ async def getPlayers(interaction: Interaction):
         await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
     
     rosters = channelData[channel_id].get("Rosters", {})
+    names = channelData[channel_id].get("TeamNames", {})
+
     if not rosters:
         await interaction.response.send_message("No teams found.", ephemeral=True)
         return
@@ -240,10 +218,12 @@ async def getPlayers(interaction: Interaction):
 
         display_names = [member.display_name for member in members if member]
         
+        teamName = names.get(roster, f"Team {roster}: No Name")
+
         if display_names:
-            embed.add_field(name=f"Team {roster}", value=", ".join(display_names), inline=False)
+            embed.add_field(name=f"{teamName}", value=", ".join(display_names), inline=False)
         else:
-            embed.add_field(name=f"Team {roster}", value="It's a ghost town here", inline=False)
+            embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
 
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -251,13 +231,16 @@ async def getPlayers(interaction: Interaction):
 timers = {}
 end_times = {}
 
+# region: Draft Control
 
 @app_commands.command(name="draft_control", description="Control drafting: pause, resume, or refresh")
 @app_commands.describe(action="Action to perform on the draft")
 @app_commands.choices(action=[
+    app_commands.Choice(name="View Sheet", value="view"),
     app_commands.Choice(name="Pause Draft", value="pause"),
     app_commands.Choice(name="Resume Draft", value="resume"),
     app_commands.Choice(name="Refresh Draft", value="refresh"),
+    app_commands.Choice(name="End Draft", value="kill"),
 ])
 async def draft_control(interaction: Interaction, action: app_commands.Choice[str]):
     if action.value == "pause":
@@ -266,6 +249,10 @@ async def draft_control(interaction: Interaction, action: app_commands.Choice[st
         await resume_draft(interaction)
     elif action.value == "refresh":
         await refresh_draft(interaction)
+    elif action.value == "kill":
+        await removeSpreadsheet(interaction)
+    elif action.value == "view":
+        await getspreadsheet(interaction)
     else:
         await interaction.response.send_message("Invalid action.", ephemeral=True)
 
@@ -292,7 +279,7 @@ async def pause_draft(interaction: Interaction):
 
         await interaction.response.send_message("Drafting has been paused. Timers are frozen.")
     else:
-        await interaction.response.send_message("No Sheet Associated with channel.")
+        await interaction.response.send_message("No Sheet Associated with channel.", ephemeral=True)
 
 # @app_commands.command(name="resume_draft", description="Resume drafting and timers in this channel")
 async def resume_draft(interaction: Interaction):
@@ -311,7 +298,7 @@ async def resume_draft(interaction: Interaction):
         if module_callback:
             module_callback(channel_id, channel["spreadsheet"])
 
-        await interaction.response.send_message("Drafting has resumed.", ephemeral=True)
+        await interaction.response.send_message("Drafting has resumed.")
     else:
         await interaction.response.send_message("Channel not initialized.", ephemeral=True)
 
@@ -341,6 +328,50 @@ async def refresh_draft(interaction: Interaction):
     else:
         await interaction.response.send_message("Channel not initialized.", ephemeral=True)
 
+# @app_commands.command(name="remove_sheet", description="Removes the sheet and deletes associate information")
+# @app_commands.guilds()
+async def removeSpreadsheet(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    await interaction.response.defer()
+
+    channel_id = str(interaction.channel_id)
+    channel_name = str(interaction.channel)
+
+    if channel_id in channelData:
+        del channelData[channel_id]
+        saveJson()
+
+    # Updates other modules, Takes longer now that I'm adding more functions
+    if module_callback:
+        module_callback(channel_id, None)
+
+    await interaction.followup.send(f"#`{channel_name}` has ended the draft", ephemeral=True)
+
+
+
+# @app_commands.command(name="get_sheet", description="Get Sheet name")
+# @app_commands.guilds()
+async def getspreadsheet(interaction: Interaction):
+
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
+    channel_name = str(interaction.channel)
+
+    if channel_id not in channelData:
+        msg = f"#`{channel_name}` has no linked spreadsheet"
+    else:
+        msg = f"#`{channel_name}` is linked to `{channelData[channel_id]['spreadsheet']}`"
+
+    await interaction.response.send_message(msg, ephemeral=True)
+
+
+# endregion
 
 @app_commands.command(name="view_timer", description="Check how much time remains before the auto-pick")
 @app_commands.guilds()  # Optional: specify guilds if needed
