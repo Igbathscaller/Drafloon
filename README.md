@@ -3,6 +3,8 @@ Draft Automation Bot
 
 - Purpose is expediate the draft process and automate left picks and skipping.
 
+
+
 ### Draft Command Specifics
 #### Order of Checks
 - Check if the input is valid (they chose from the options)
@@ -20,25 +22,35 @@ Draft Automation Bot
 - Possibly allow people to update their own logos and teamNames (optional/low prio)
 
 ### Things to Implement
-- Locks for taking turns (optional/low prio) 
-It seems pretty hard to sync up, but it is theoretically possible for players on the same team to draft at the same time.
-- Probably a way to remove a player from the skipped list in case of manual draft.
-- When adding sheet, start it as paused
-- Make the turn count number of skilled players + number of pokemon drafted (0-indexed)
-- Allow the code to be do a draft order that is randomized based on roster code.
-- Allow mass player adds when adding players. Needs up to 9 additional players.
+- lock check for skipping command or at the very least not starting a timer when draft is paused.
+- a way to remove a player from the skipped lis
+- autoskip and autopause should have timers edited. Implement a way to call timer to autopick and after failing an autopick, it autoskips.
+- small change (edit max drafted to 8 or a variable amount. 8 is fine for now)
 
-### Important Secondary
-- Link google sheets docs to make comparisons easier and allow others to set up.
-- (risky so test in test server before implementing) introduce automatic creation and deletion of scheduling channels.
+## How to SetUp
 
+To Do
 
-## Things that were successfully implemented
+## Current Commands and Functionality
+
+### Player/Open Commands
+- Draft
+- Leave_Pick
+- View_Picks
+- Turn_Info
+- View_Players
+
+### Mod/Management Commands
+- Set_Sheet (initializes a channel for functionality)
+- Draft_Control (view,pause,resume,refresh,end)
+- add/remove Players
+- add/remove Skipped (for manual additions to drafting)
+- Skip
+- View_Picks_Mod (view players picks)
+- Stop Timer
+- Set/Update/Create/Delete Channels
+
 #### Discord Interaction
-- Command to Link a trades channel with a corresponding spreadsheet (mods only)
-- Command to Link a user to a specific team/roster (mods only)
-- Command to see the players on a roster
-- Command to see associate spreadsheet (might make mod only)
 
 #### Google Sheets
 - Ability to view roster
