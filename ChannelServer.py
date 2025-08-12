@@ -80,7 +80,8 @@ def getTurn(channel_id: str):
 
 # Config Function
 # Needs Permission to use
-@app_commands.command(name="set_sheet", description="Connect Draft to a Sheet")
+@app_commands.command(name="set_sheet", 
+                      description="(mod) Connect Draft to a Sheet. This initializes the channel and no commands before this is done")
 @app_commands.guilds()
 @app_commands.describe(spreadsheet_url= "spreadsheet URL", player_count="number of players, defaults to 16")
 async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_count: app_commands.Range[int, 1, None] = 16):
@@ -118,7 +119,7 @@ async def setspreadsheet(interaction: Interaction, spreadsheet_url: str, player_
 # Config Funtion
 # Needs Permission to Run
 
-@app_commands.command(name="player_add", description="Add a Discord User to a Team")
+@app_commands.command(name="player_add", description="(mod) Add Discord Users to a Team, they will be allowed to draft and leave picks for the team")
 @app_commands.guilds()
 async def setPlayerRoster(  interaction: Interaction, team: str, member: Member, 
                             member2: Member = None,
@@ -175,7 +176,7 @@ async def setPlayerRoster(  interaction: Interaction, team: str, member: Member,
 # Check if player is on team
 # Removes player from team if on a team
 
-@app_commands.command(name="player_remove", description="Remove a Discord User from a Team")
+@app_commands.command(name="player_remove", description="(mod) Remove a Discord User from a Team")
 @app_commands.guilds()
 async def removePlayer(interaction: Interaction, member: Member):
     if not interaction.user.guild_permissions.manage_messages:
@@ -204,7 +205,7 @@ async def removePlayer(interaction: Interaction, member: Member):
     await interaction.response.send_message(msg, ephemeral=True)
 
 # This is for fixing/matching the skipped teams/turn in case of a manual update/change.
-@app_commands.command(name="skipped_teams_add", description="Add a Discord User to a Team")
+@app_commands.command(name="skipped_teams_add", description="(mod) lists a team as skipped. This is for the purposes of manual roster changes")
 @app_commands.guilds()
 async def addSkipped(  interaction: Interaction, team: str, 
                             team2: str = None,
@@ -234,8 +235,8 @@ async def addSkipped(  interaction: Interaction, team: str,
 
     await interaction.response.send_message(f"added Teams: {', '.join(toBeSkipped)} to skipped list", ephemeral=True)
 
-@app_commands.command(name="players", description="See all the Player's Involved")
-@app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
+@app_commands.command(name="players", description="See all the teams and what players are on each team")
+@app_commands.checks.cooldown(1, 1, key=lambda i: (i.channel_id))
 @app_commands.guilds()
 async def getPlayers(interaction: Interaction):
     channel_id = str(interaction.channel_id)
@@ -281,7 +282,7 @@ end_times = {}
 
 # region: Draft Control
 
-@app_commands.command(name="draft_control", description="Control drafting: pause, resume, or refresh")
+@app_commands.command(name="draft_control", description="Control Drafting: pause, resume, refresh, or end the draft/ view the sheet key")
 @app_commands.describe(action="Action to perform on the draft")
 @app_commands.choices(action=[
     app_commands.Choice(name="View Sheet", value="view"),
@@ -421,7 +422,7 @@ async def getspreadsheet(interaction: Interaction):
 
 # endregion
 
-@app_commands.command(name="turn_info", description="Shows current turn, draft timer, and skipped players")
+@app_commands.command(name="turn_info", description= "Shows current turn, draft timer, and skipped players")
 @app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
 @app_commands.guilds() 
 async def turn_info(interaction: Interaction):

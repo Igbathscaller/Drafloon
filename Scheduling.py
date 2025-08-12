@@ -64,7 +64,39 @@ def extract_sheet_id(sheet_url: str):
         return match.group(1)
     return None
 
+@discord.app_commands.command(name="fetch_schedule", description="Fetch the schedule from the linked Google Sheet. Must save a sheet first")
+async def update_schedule(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_channels:
+        await interaction.response.send_message("You don't have permission.")
+        return
 
+    await interaction.response.defer()
+
+    channel_id = str(interaction.channel_id)
+
+    if channel_id not in schedules or "spreadsheet_id" not in schedules[channel_id]:
+        await interaction.followup.send("No Google Sheet linked for this channel.  Use /save_schedule_sheet")
+        return
+
+    spreadsheet_id = schedules[channel_id]["spreadsheet_id"]
+    try:
+        sheet = client.open_by_key(spreadsheet_id)
+        response = sheet.values_get("Scheduling Code!D2:CD9")
+        data = response.get("values", [])
+
+    except Exception as e:
+        await interaction.followup.send(f"Failed to open sheet: {e}")
+        return
+
+    schedule = get_schedule(data)
+    schedules[channel_id]["schedules"] = schedule
+    save_schedule_data()
+
+
+    weeks_count = len(schedule)
+    await interaction.followup.send(f"Schedule updated from Google Sheets. Found {weeks_count} week(s).")
+
+# helper function to parse imported data.
 def get_schedule(data):
     schedule = {}
     max_cols = 79 
@@ -98,40 +130,8 @@ def get_schedule(data):
 
     return schedule
 
-@discord.app_commands.command(name="update_schedule", description="Fetch the schedule from the linked Google Sheet")
-async def update_schedule(interaction: Interaction):
-    if not interaction.user.guild_permissions.manage_channels:
-        await interaction.response.send_message("You don't have permission.")
-        return
 
-    await interaction.response.defer()
-
-    channel_id = str(interaction.channel_id)
-
-    if channel_id not in schedules or "spreadsheet_id" not in schedules[channel_id]:
-        await interaction.followup.send("No Google Sheet linked for this channel.")
-        return
-
-    spreadsheet_id = schedules[channel_id]["spreadsheet_id"]
-    try:
-        sheet = client.open_by_key(spreadsheet_id)
-        response = sheet.values_get("Scheduling Code!D2:CD9")
-        data = response.get("values", [])
-
-    except Exception as e:
-        await interaction.followup.send(f"Failed to open sheet: {e}")
-        return
-
-    schedule = get_schedule(data)
-    schedules[channel_id]["schedules"] = schedule
-    save_schedule_data()
-
-
-    weeks_count = len(schedule)
-    await interaction.followup.send(f"Schedule updated from Google Sheets. Found {weeks_count} week(s).")
-
-
-@discord.app_commands.command(name="create_channels", description="Create scheduling channels for a given week")
+@discord.app_commands.command(name="create_channels", description="Create Scheduling Channels for a given week. Must save a sheet and fetch first")
 @app_commands.describe(week="Week number")
 @app_commands.choices(week=[
     app_commands.Choice(name="1", value="1"),app_commands.Choice(name="2", value="2"),
@@ -149,7 +149,7 @@ async def schedulingChannels(interaction: Interaction, week: str):
     channel_id = str(interaction.channel_id)
 
     if channel_id not in schedules:
-        await interaction.followup.send("No schedule data found for this channel.")
+        await interaction.followup.send("No schedule data found for this channel. Use /save_schedule_sheet and /fetch_schedule.")
         return
     
     schedule = schedules[channel_id].get("schedules", {})
@@ -194,7 +194,7 @@ async def schedulingChannels(interaction: Interaction, week: str):
     
     await interaction.followup.send(f"Schedules Sucessfully Created for Week {week}")
 
-@discord.app_commands.command(name="delete_channels", description="Delete Channels")
+@discord.app_commands.command(name="delete_channels", description= "Delete Channels that were created by the bot and saved")
 async def deleteChannels(interaction: Interaction):
     await interaction.response.defer()
 
@@ -205,7 +205,7 @@ async def deleteChannels(interaction: Interaction):
     channel_id = str(interaction.channel_id)
 
     if channel_id not in schedules:
-        await interaction.followup.send("No schedule data found for this channel.")
+        await interaction.followup.send("No schedule data found for this channel. use /save_schedule_sheet and /fetch_schedule first")
         return
     
     guild = interaction.guild

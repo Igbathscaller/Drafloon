@@ -96,10 +96,38 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
     return [app_commands.Choice(name=name, value=name) for name in results]
 
 
+pick_time = 10 # Time before auto-pickings
+skip_time = 20 # Time before auto-skipping
 #region: Timer Related Functions
 
-# Starting Timer
-async def start_timer(interaction: Interaction, timeout = 180):
+# Starts the Pick Timer
+async def start_pick_timer(interaction: Interaction):
+    
+    channel_id = str(interaction.channel_id)
+
+    # End Previous Timer in the Channel 
+    if channel_id in ChannelServer.timers:
+        ChannelServer.timers[channel_id].cancel()
+    
+    # Define the timer before auto pickking
+    async def timer():
+        try:
+            await asyncio.sleep(pick_time)
+            await auto_pick(interaction)
+        except asyncio.CancelledError:
+            # print("Timer cancelled")
+            pass
+        except Exception as e:
+            print(f"Timer Error: {e}")
+            raise
+    # Start the timer
+    ChannelServer.timers[channel_id] = asyncio.create_task(timer())
+    # Compute and save end time (include skip time as well)
+    end_time = time.monotonic() + pick_time + skip_time
+    ChannelServer.end_times[channel_id] = end_time
+
+# Starts the Skip Timer (meant for after the pick timer runs)
+async def start_skip_timer(interaction: Interaction):
     
     channel_id = str(interaction.channel_id)
 
@@ -110,18 +138,18 @@ async def start_timer(interaction: Interaction, timeout = 180):
     # Define a timer 
     async def timer():
         try:
-            await asyncio.sleep(timeout)
-            await auto_pick(interaction)
+            await asyncio.sleep(skip_time)
+            await auto_skip(interaction)
         except asyncio.CancelledError:
-            print("Timer cancelled cleanly.")
+            # print("Skip Timer cancelled")
             pass
         except Exception as e:
             print(f"Timer Error: {e}")
             raise
     # Start the timer
     ChannelServer.timers[channel_id] = asyncio.create_task(timer())
-    # Compute and save end time
-    end_time = time.monotonic() + timeout
+    # Compute and save end time (include skip time as well)
+    end_time = time.monotonic() + skip_time
     ChannelServer.end_times[channel_id] = end_time
 
 
@@ -134,7 +162,7 @@ def end_timer(channel_id: str):
         del ChannelServer.end_times[channel_id]
 
 # Stop Timer Command
-@app_commands.command(name="stop_timer",description="Stops the timer (mod)")
+@app_commands.command(name="stop_timer", description="(mod) Stops the skip timer")
 @app_commands.guilds()
 async def stop_timer(interaction: Interaction):
     if not interaction.user.guild_permissions.manage_messages:
@@ -164,7 +192,7 @@ def skip(channel_id: str) -> str:
         return None
     else:
         team = ChannelServer.getTurn(channel_id)[1]
-        channel["Skipped"].append(team)
+        channel["Skipped"].append(str(team))
         channel["Turn"]+=1
         ChannelServer.saveJson()
         return str(team)
@@ -175,15 +203,21 @@ async def auto_skip(interaction: Interaction):
     channel_id = str(interaction.channel_id)
     team = skip(channel_id)
 
+    teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
     # In case the team has no players or has not been initialized
     skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
-    mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+    skippedMentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+    await interaction.channel.send(f"{teamName} (pick {team}): {skippedMentions} Skipped. Leave Picks Next Time")
+    
+    # Mention the next players
+    nextMentions = mention_team_players(channel_id)
+    await interaction.channel.send("Next: " + nextMentions)
 
-    await interaction.channel.send(f"Team {team}: {mentions} Skipped. Faster Next Time Stupid")
-    await start_timer(interaction)
+    # After Player has been skipped, start the skip timer
+    await start_pick_timer(interaction)
 
 # Manual Skip Command
-@app_commands.command(name="skip",description="Skip the Current Player (mod)")
+@app_commands.command(name="skip",description="(mod) Skips the Current Player")
 @app_commands.guilds()
 async def skip_player(interaction: Interaction):
     if not interaction.user.guild_permissions.manage_messages:
@@ -196,14 +230,20 @@ async def skip_player(interaction: Interaction):
     if not team:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet")
     else:
+        teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
         # In case the team has no players or has not been initialized
         skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
-        mentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-        teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
-
-        await interaction.response.send_message(f"{teamName} (pick {team}): {mentions} Skipped.")
-        # Start Timer at the end of each action. Only activate timer if we know it'll work.
-        await start_timer(interaction)
+        skippedMentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
+        await interaction.response.send_message(f"{teamName}: {skippedMentions} Skipped.")
+        
+        # Mention the next players
+        nextMentions = mention_team_players(channel_id)
+        await interaction.channel.send("Next: " + nextMentions)
+        
+        # Start Timer at the end of each action. 
+        # Only activate timer if the draft is not paused when skipping
+        if not ChannelServer.channelData[channel_id]["Paused"]:
+            await start_pick_timer(interaction)
 
 #endregion
 
@@ -248,7 +288,7 @@ async def addToRoster(channel_id: str, pokemon: str, team: int, nextSlot: int, p
     return (True, pointsLeft)
 
 # Manual Draft Command
-@app_commands.command(name="draft",description="draft a pokemon")
+@app_commands.command(name="draft",description= "Drafts a Pokemon to your team if it is valid")
 @app_commands.describe(pokemon="Pick a Pokemon")
 @app_commands.autocomplete(pokemon=pokemon_autocomplete)
 @app_commands.guilds()
@@ -298,10 +338,10 @@ async def draft(interaction: Interaction, pokemon: str):
     # if it is your turn, you can draft
     if team != turn:
         #  if you have a skip, use skipped turn to draft
-        if team in channel["Skipped"]:
+        if str(team) in channel["Skipped"]:
             skipped = True
         else:
-            turnName = channel["TeamNames"].get(team, "No Team Name")
+            turnName = channel["TeamNames"].get(str(turn), "No Team Name")
             await interaction.response.send_message(f"It's not your turn! It's {turnName}'s turn.")
             return
     
@@ -323,23 +363,29 @@ async def draft(interaction: Interaction, pokemon: str):
 
     # If it is a skip turn, let them take their skipped turn
     if skipped:
-        channel["Skipped"].remove(team)
+        channel["Skipped"].remove(str(team))
     # Otherwise increment the channel order
     else:
         channel["Turn"] += 1
     
     ChannelServer.saveJson()
     
+    mentions = mention_team_players(channel_id)
+
     image_url = pokemon_data.get(pokemon)
     try:
         embed = Embed(title = f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
+        await interaction.channel.send("Next" + mentions)
     except Exception as e:
         await interaction.followup.send(f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.channel.send("Next Pick: " + mentions)
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
-    await start_timer(interaction)
+    # No Timers Start on the First Round
+    if round > 0:
+        await start_pick_timer(interaction)
 
 # Automatic Draft Function
 async def auto_pick(interaction: Interaction):
@@ -361,7 +407,8 @@ async def auto_pick(interaction: Interaction):
 
     # If there are no picks, we will autoskip them
     if not picks:
-        await auto_skip(interaction)
+        await interaction.channel.send("No Picks were left.")
+        await start_skip_timer(interaction)
         return
     
     # Get the Pokemon and start the draft process
@@ -399,9 +446,9 @@ async def auto_pick(interaction: Interaction):
     savePicksJson()
 
     if not pokemon:
-        await interaction.channel.send("No draftable picks left")
-        await auto_skip(interaction)
-        return
+        await interaction.channel.send("No picks left were Draftable")
+        await start_skip_timer(interaction)
+        return 
 
     # In case the team has no players or has not been initialized
     autoPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
@@ -419,7 +466,30 @@ async def auto_pick(interaction: Interaction):
         await interaction.channel.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
-    await start_timer(interaction)    
+    # No Timers Start on the First Round
+    if round > 0:
+        await start_pick_timer(interaction)
 
 #endregion
 
+#region: Mentioning the next players
+
+def mention_team_players(channel_id: str):
+    if channel_id not in ChannelServer.channelData:
+        return ""
+
+    round,team = ChannelServer.getTurn(channel_id)
+    team = str(team)
+
+    if round == -1:
+        return ""
+
+    teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
+    roster = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
+
+    mentions = [f"<@{user_id}>" for user_id in roster]
+
+    return f"{teamName}; {', '.join(mentions)}"
+
+
+#endregion

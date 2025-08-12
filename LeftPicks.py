@@ -41,7 +41,7 @@ def getPicks(channel_id: str, team: str) -> list:
 @app_commands.describe(pokemon = "Pick a Pokemon", 
                        backup_1 = "If your main choice was sniped", 
                        backup_2 = "If your backup was also sniped",
-                       slot= "if you want it to be a higher priority")
+                       slot= "set a higher priority (replaces and moves everything down)")
 @app_commands.autocomplete(pokemon=Draft.pokemon_autocomplete, backup_1=Draft.pokemon_autocomplete, backup_2=Draft.pokemon_autocomplete)
 @app_commands.guilds()
 async def leave_pick(interaction: Interaction, pokemon: str, 
@@ -255,7 +255,7 @@ async def view_picks(interaction: Interaction):
     view.message = sent_message
     add_active_message(channel_id, team, sent_message)
 
-@app_commands.command(name="view_picks_mod",description="View Your Picks (Mod Abuse Ver.)")
+@app_commands.command(name="view_picks_mod",description="(Mod Abuse Ver.) View a team's Picks")
 @app_commands.guilds()
 async def view_picks_mod(interaction: Interaction, team: str):
 
@@ -305,6 +305,6 @@ log_file = "log.txt"
 def log_pick(user_id: str, channel_id: str, action: str, names: list):
     names_str = ", ".join(filter(None, names))
     with open(log_file, "a", encoding="utf-8") as f:
-        f.write(f"{channel_id} {user_id} {action} {names_str}\n")
+        f.write(f"<#{channel_id}> <@{user_id}> {action} {names_str}\n")
 
 # endregion
