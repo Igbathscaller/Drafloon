@@ -25,7 +25,7 @@ try:
     with open("schedule_data.json", "r") as f:
         schedules = json.load(f)
 except FileNotFoundError:
-    print("file not fount")
+    print("scheduling data file not found")
 
 # Save data to schedule
 def save_schedule_data():
@@ -33,7 +33,7 @@ def save_schedule_data():
         json.dump(schedules, f, indent=2)
 
 # Save The Google Sheet Url and conert it to the key.
-@discord.app_commands.command(name="save_schedule_sheet", description="Link a Google Sheet URL to this channel")
+@discord.app_commands.command(name="set_schedule_sheet", description="Link a Google Sheet URL to this channel")
 @app_commands.describe(sheet_url="Google Sheets URL")
 async def save_schedule_sheet(interaction: Interaction, sheet_url: str):
     if not interaction.user.guild_permissions.manage_channels:
@@ -64,7 +64,7 @@ def extract_sheet_id(sheet_url: str):
         return match.group(1)
     return None
 
-@discord.app_commands.command(name="fetch_schedule", description="Fetch the schedule from the linked Google Sheet. Must save a sheet first")
+@discord.app_commands.command(name="fetch_schedule", description="Fetch the schedule from the linked Google Sheet. Must set a sheet first")
 async def update_schedule(interaction: Interaction):
     if not interaction.user.guild_permissions.manage_channels:
         await interaction.response.send_message("You don't have permission.")
@@ -75,7 +75,7 @@ async def update_schedule(interaction: Interaction):
     channel_id = str(interaction.channel_id)
 
     if channel_id not in schedules or "spreadsheet_id" not in schedules[channel_id]:
-        await interaction.followup.send("No Google Sheet linked for this channel.  Use /save_schedule_sheet")
+        await interaction.followup.send("No Google Sheet linked for this channel.  Use /set_schedule_sheet")
         return
 
     spreadsheet_id = schedules[channel_id]["spreadsheet_id"]
@@ -131,7 +131,7 @@ def get_schedule(data):
     return schedule
 
 
-@discord.app_commands.command(name="create_channels", description="Create Scheduling Channels for a given week. Must save a sheet and fetch first")
+@discord.app_commands.command(name="create_channels", description="Create Scheduling Channels for a given week. Must set a sheet and fetch first")
 @app_commands.describe(week="Week number")
 @app_commands.choices(week=[
     app_commands.Choice(name="1", value="1"),app_commands.Choice(name="2", value="2"),
@@ -149,7 +149,7 @@ async def schedulingChannels(interaction: Interaction, week: str):
     channel_id = str(interaction.channel_id)
 
     if channel_id not in schedules:
-        await interaction.followup.send("No schedule data found for this channel. Use /save_schedule_sheet and /fetch_schedule.")
+        await interaction.followup.send("No schedule data found for this channel. Use /set_schedule_sheet and /fetch_schedule.")
         return
     
     schedule = schedules[channel_id].get("schedules", {})
@@ -205,7 +205,7 @@ async def deleteChannels(interaction: Interaction):
     channel_id = str(interaction.channel_id)
 
     if channel_id not in schedules:
-        await interaction.followup.send("No schedule data found for this channel. use /save_schedule_sheet and /fetch_schedule first")
+        await interaction.followup.send("No schedule data found for this channel. use /set_schedule_sheet and /fetch_schedule first")
         return
     
     guild = interaction.guild
