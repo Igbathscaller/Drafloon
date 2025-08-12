@@ -2,34 +2,11 @@
 Draft Automation Bot
 
 - Purpose is expediate the draft process and automate left picks and skipping.
-
-
-
-### Draft Command Specifics
-#### Order of Checks
-- Check if the input is valid (they chose from the options)
-- Check if the channel has an associated spreadsheet
-- Check if the player is on a team
-- Check if the turn of the draft and matches the player's team (allows skipped teams go make up)
-- Check if the pokemon is draft legal (99 points are not allowed + not on draft board)
-- Check if you have enough slots to draft (Currently hard-coded 11 slots)
-- Check if you have enough points to draft the mon
-- Check if you someone has drafted the pokemon
-
-## Plan
-
-### Google Sheets
-- Possibly allow people to update their own logos and teamNames (optional/low prio)
-
-### Things to Implement
-- lock check for skipping command or at the very least not starting a timer when draft is paused.
-- a way to remove a player from the skipped lis
-- autoskip and autopause should have timers edited. Implement a way to call timer to autopick and after failing an autopick, it autoskips.
-- small change (edit max drafted to 8 or a variable amount. 8 is fine for now)
+- Also has the ability to create weekly schedule channel after importing a sheet.
 
 ## How to SetUp
 
-To Do
+To Describe in the Future
 
 ## Current Commands and Functionality
 
@@ -48,9 +25,32 @@ To Do
 - Skip
 - View_Picks_Mod (view players picks)
 - Stop Timer
-- Set/Update/Create/Delete Channels
+- Set/Update/Create/Delete Scheduling Channels
 
-#### Discord Interaction
+### Channel Management Command Details
+- Set_Sheet must be run before all commands except Scheduling related commands.
+- All Drafts start as paused after setting the sheet. To allow players to draft, you must unpause the draft. No other functionality is prevented by pausing the draft.
+- The bot stores a local copy of all pokemon drafted, and determines the turn by counting the number of pokemon and skipped players. In case of a manual update, use Draft_Control Refresh in order to refresh the data.
+- Since turn is determined by the number of pokemon and skipped players, you should add and remove all skipped players appropriately, so it tracks the turn correctly.
+- Players must be assigned to a team so they can access the draft and leaving pick functionality.
+- Teams are denoted by their *draft number*, not their actual name. No command accepts actual Team Names as an input. (Can be changed in the future with Autocomplete).
+
+### Draft Command Specifics
+#### Order of Checks
+- Check if the input is valid (they chose from the options)
+- Check if the channel has an associated spreadsheet
+- Check if the player is on a team
+- Check if the turn of the draft and matches the player's team (allows skipped teams go make up)
+- Check if the pokemon is draft legal (99 points are not allowed + not on draft board)
+- Check if you have enough slots to draft (Currently hard-coded 11 slots)
+- Check if you have enough points to draft the mon
+- Check if you someone has drafted the pokemon
+
+### Leave/View_Picks Details
+- You can leave up to 10 picks with up to 2 backups, and you can optionally select a higher priority.
+- It performs the same checks as the Draft Command to determine if it is a valid draft.
+- You can delete/remove picks by using the View Picks Command.
+- All View_Picks Embeds are synced, and when a pick is removed, it is removed for all users viewing picks (including mods).
 
 #### Google Sheets
 - Ability to view roster
@@ -62,10 +62,3 @@ To Do
   - Both issues can be remedied by having an update doc function whenever we make a manual change to the doc. Signficantly reducing query time.
 - Loads saved spreadsheets on runtime
 - Whenever a spreadsheet is opened, it is saved so it does not need to be re-accessed.
-
-#### Draft Functionality
-- Ability to draft picks
-- Ability to leave picks
-- Automatically starts a timer when you run
-- Skips when you don't make a pick by a certain time.
-- Saves list of pokemon on startup
