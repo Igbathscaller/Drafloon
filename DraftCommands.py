@@ -213,7 +213,9 @@ async def auto_skip(interaction: Interaction):
     
     # Mention the next players
     round, nextMentions = mention_team_players(channel_id)
-    await interaction.channel.send("Next Pick: " + nextMentions)
+
+    if round < 8:
+        await interaction.channel.send("Next Pick: " + nextMentions)
 
     # After Player has been skipped, start the skip timer
     if round > 0 and round < 8:
@@ -243,7 +245,8 @@ async def skip_player(interaction: Interaction):
         
         # Mention the next players
         round, nextMentions = mention_team_players(channel_id)
-        await interaction.channel.send("Next Pick: " + nextMentions)
+        if round < 8:
+            await interaction.channel.send("Next Pick: " + nextMentions)
         
         # Start Timer at the end of each action. 
         # Only activate timer if the draft is not paused when skipping
@@ -378,17 +381,19 @@ async def draft(interaction: Interaction, pokemon: str):
     
     ChannelServer.saveJson()
     
-    round, mentions = mention_team_players(channel_id)
+    round, nextMentions = mention_team_players(channel_id)
 
     image_url = pokemon_data.get(pokemon)
     try:
         embed = Embed(title = f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
-        await interaction.channel.send("Next Pick: " + mentions)
+        if round < 8:
+            await interaction.channel.send("Next Pick: " + nextMentions)
     except Exception as e:
         await interaction.followup.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
-        await interaction.channel.send("Next Pick: " + mentions)
+        if round < 8:
+            await interaction.channel.send("Next Pick: " + nextMentions)
 
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
@@ -464,7 +469,7 @@ async def auto_pick(interaction: Interaction):
         return 
 
     # In case the team has no players or has not been initialized
-    round, mentions = mention_team_players(channel_id)
+    round, nextMentions = mention_team_players(channel_id)
 
     
     channel["Turn"]+=1
@@ -475,11 +480,13 @@ async def auto_pick(interaction: Interaction):
         embed = Embed(title = f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.channel.send("", embed=embed)
-        await interaction.channel.send("Next Pick: " + mentions)
+        if round < 8:
+            await interaction.channel.send("Next Pick: " + nextMentions)
 
     except Exception as e:
         await interaction.channel.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
-        await interaction.channel.send("Next Pick: " + mentions)
+        if round < 8:
+            await interaction.channel.send("Next Pick: " + nextMentions)
 
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
