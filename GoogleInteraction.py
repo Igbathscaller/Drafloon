@@ -209,9 +209,13 @@ def getNextSlot(spreadSheet: gspread.Spreadsheet, channel_id: str, roster: int):
     rosterList = readRosterRange(spreadSheet, roster, range(5,16))
     
     pointTotal = 0
-    for i in range(11):
+    # THIS IS WHERE YOU SET THE TEAM SIZE.
+    teamSize = 8 
+
+    for i in range(teamSize):
         if rosterList[i].value in ("-","",None):
             return (i+1, pointTotal)
         else:
             pointTotal += pointDict[channel_id].get(rosterList[i].value, 0)
+    
     return (-1, pointTotal)
