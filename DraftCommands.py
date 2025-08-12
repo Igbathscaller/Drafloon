@@ -7,6 +7,9 @@ import asyncio
 import GoogleInteraction as ggSheet
 import ChannelServer
 
+pick_time = 30 # Time in Seconds before auto-pickings
+skip_time = 90 # Time in Seconds before auto-skipping
+
 #region: Loading the Data at Startup + Functions for handling data
 
 #list of Pokemon
@@ -96,8 +99,6 @@ async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[a
     return [app_commands.Choice(name=name, value=name) for name in results]
 
 
-pick_time = 10 # Time before auto-pickings
-skip_time = 20 # Time before auto-skipping
 #region: Timer Related Functions
 
 # Starts the Pick Timer
@@ -374,18 +375,18 @@ async def draft(interaction: Interaction, pokemon: str):
 
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
-        await interaction.channel.send("Next Pick" + mentions)
+        await interaction.channel.send("Next Pick: " + mentions)
     except Exception as e:
-        await interaction.followup.send(f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.followup.send(f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         await interaction.channel.send("Next Pick: " + mentions)
 
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     # No Timers Start on the First Round
-    if round > 0:
+    if round > 0 and round < 8:
         await start_pick_timer(interaction)
 
 # Automatic Draft Function
@@ -405,10 +406,11 @@ async def auto_pick(interaction: Interaction):
     (round, team) = ChannelServer.getTurn(channel_id)
 
     picks = pickList["Rosters"].get(str(team), None)
+    teamName = ChannelServer.channelData["TeamNames"].get(str(team), "No Name")
 
     # If there are no picks, we will autoskip them
     if not picks:
-        await interaction.channel.send("No Picks were left.")
+        await interaction.channel.send(f"{teamName} left no picks/ran out of picks")
         await start_skip_timer(interaction)
         return
     
@@ -447,7 +449,7 @@ async def auto_pick(interaction: Interaction):
     savePicksJson()
 
     if not pokemon:
-        await interaction.channel.send("No picks left were Draftable")
+        await interaction.channel.send(f"None of {teamName}'s picks left were draftable")
         await start_skip_timer(interaction)
         return 
 
@@ -460,19 +462,19 @@ async def auto_pick(interaction: Interaction):
 
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"Team {team} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.channel.send("", embed=embed)
         await interaction.channel.send("Next Pick: " + mentions)
 
     except Exception as e:
-        await interaction.channel.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.channel.send(f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         await interaction.channel.send("Next Pick: " + mentions)
 
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     # No Timers Start on the First Round
-    if round > 0:
+    if round > 0 and round < 8:
         await start_pick_timer(interaction)
 
 #endregion
