@@ -192,18 +192,19 @@ def skip(channel_id: str) -> str:
     if not channel:
         return None
     else:
-        team = ChannelServer.getTurn(channel_id)[1]
+        round, team = ChannelServer.getTurn(channel_id)
         channel["Skipped"].append(str(team))
         channel["Turn"]+=1
         ChannelServer.saveJson()
-        return str(team)
+        return round, str(team)
 
 # Automatically Skip
 async def auto_skip(interaction: Interaction):
     
     channel_id = str(interaction.channel_id)
-    team = skip(channel_id)
+    round, team = skip(channel_id)
 
+    
     teamName = ChannelServer.channelData[channel_id]["TeamNames"].get(team, "No Team Name")
     # In case the team has no players or has not been initialized
     skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
@@ -215,7 +216,8 @@ async def auto_skip(interaction: Interaction):
     await interaction.channel.send("Next Pick: " + nextMentions)
 
     # After Player has been skipped, start the skip timer
-    await start_pick_timer(interaction)
+    if round > 0 and round < 8:
+        await start_pick_timer(interaction)
 
 # Manual Skip Command
 @app_commands.command(name="skip",description="(mod) Skips the Current Player")
@@ -226,7 +228,7 @@ async def skip_player(interaction: Interaction):
         return
     
     channel_id = str(interaction.channel_id)
-    team = skip(channel_id)
+    round, team = skip(channel_id)
 
     if not team:
         await interaction.response.send_message("This Channel has no Associated Spreadsheet")
@@ -243,7 +245,7 @@ async def skip_player(interaction: Interaction):
         
         # Start Timer at the end of each action. 
         # Only activate timer if the draft is not paused when skipping
-        if not ChannelServer.channelData[channel_id]["Paused"]:
+        if not ChannelServer.channelData[channel_id]["Paused"] and round > 0 and round < 8:
             await start_pick_timer(interaction)
 
 #endregion
