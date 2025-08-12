@@ -16,6 +16,12 @@ import Scheduling
 load_dotenv()
 Guild_Id = os.getenv("Guild_Id")
 Token = os.getenv("Discord_Token")
+pickTime = os.getenv("Discord_Token")
+skipTime = os.getenv("Discord_Token")
+if pickTime is not None: Draft.pick_time = int(pickTime)
+if skipTime is not None: Draft.skip_time = int(skipTime)
+
+
 
 intents = discord.Intents.default()
 intents.message_content = True
