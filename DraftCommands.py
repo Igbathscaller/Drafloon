@@ -208,7 +208,7 @@ async def auto_skip(interaction: Interaction):
     # In case the team has no players or has not been initialized
     skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
     skippedMentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-    await interaction.channel.send(f"{teamName} (pick {team}): {skippedMentions} Skipped. Leave Picks Next Time")
+    await interaction.channel.send(f"`{teamName}`: {skippedMentions} Skipped. Leave Picks Next Time")
     
     # Mention the next players
     nextMentions = mention_team_players(channel_id)
@@ -235,7 +235,7 @@ async def skip_player(interaction: Interaction):
         # In case the team has no players or has not been initialized
         skippedPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
         skippedMentions = " ".join(f"<@{user_id}>" for user_id in skippedPlayers)
-        await interaction.response.send_message(f"{teamName}: {skippedMentions} Skipped.")
+        await interaction.response.send_message(f"`{teamName}`: {skippedMentions} Skipped.")
         
         # Mention the next players
         nextMentions = mention_team_players(channel_id)
@@ -380,7 +380,7 @@ async def draft(interaction: Interaction, pokemon: str):
         await interaction.followup.send("", embed=embed)
         await interaction.channel.send("Next Pick: " + mentions)
     except Exception as e:
-        await interaction.followup.send(f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.followup.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         await interaction.channel.send("Next Pick: " + mentions)
 
         print(f"Error drafting: {e}")
@@ -410,7 +410,7 @@ async def auto_pick(interaction: Interaction):
 
     # If there are no picks, we will autoskip them
     if not picks:
-        await interaction.channel.send(f"{teamName} left no picks/ran out of picks")
+        await interaction.channel.send(f"`{teamName}` left no picks/ran out of picks")
         await start_skip_timer(interaction)
         return
     
@@ -449,7 +449,7 @@ async def auto_pick(interaction: Interaction):
     savePicksJson()
 
     if not pokemon:
-        await interaction.channel.send(f"None of {teamName}'s picks left were draftable")
+        await interaction.channel.send(f"None of `{teamName}`'s picks left were draftable")
         await start_skip_timer(interaction)
         return 
 
@@ -462,13 +462,13 @@ async def auto_pick(interaction: Interaction):
 
     image_url = pokemon_data.get(pokemon)
     try:
-        embed = Embed(title = f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        embed = Embed(title = f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.channel.send("", embed=embed)
         await interaction.channel.send("Next Pick: " + mentions)
 
     except Exception as e:
-        await interaction.channel.send(f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.channel.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         await interaction.channel.send("Next Pick: " + mentions)
 
         print(f"Error drafting: {e}")
@@ -496,7 +496,7 @@ def mention_team_players(channel_id: str):
 
     mentions = [f"<@{user_id}>" for user_id in roster]
 
-    return f"{teamName}; {', '.join(mentions)}"
+    return f"`{teamName}`; {', '.join(mentions)}"
 
 
 #endregion
