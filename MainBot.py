@@ -16,8 +16,8 @@ import Scheduling
 load_dotenv()
 Guild_Id = os.getenv("Guild_Id")
 Token = os.getenv("Discord_Token")
-pickTime = os.getenv("Discord_Token")
-skipTime = os.getenv("Discord_Token")
+pickTime = os.getenv("Pick_Time")
+skipTime = os.getenv("Skip_Time")
 if pickTime is not None: Draft.pick_time = int(pickTime)
 if skipTime is not None: Draft.skip_time = int(skipTime)
 
