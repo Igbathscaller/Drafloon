@@ -60,7 +60,7 @@ def loadPicks(channel_id: str):
 # Autocomplete function (helper function for limiting client options)
 async def pokemon_autocomplete(interaction: Interaction, current: str) -> list[app_commands.Choice[str]]:
     if not current:
-            return [app_commands.Choice(name=name, value=name) for name in ["Toxapex", "Ampharos"]]
+            return [app_commands.Choice(name=name, value=name) for name in ["Toxapex", "Ampharos", "Blissey", "Gliscor", "Dondozo", "Alomomola", "Emolga", "Pikachu", "Plusle"]]
 
     current = current.lower()
     results = []
@@ -211,7 +211,7 @@ async def auto_skip(interaction: Interaction):
     
     # Mention the next players
     nextMentions = mention_team_players(channel_id)
-    await interaction.channel.send("Next: " + nextMentions)
+    await interaction.channel.send("Next Pick: " + nextMentions)
 
     # After Player has been skipped, start the skip timer
     await start_pick_timer(interaction)
@@ -238,7 +238,7 @@ async def skip_player(interaction: Interaction):
         
         # Mention the next players
         nextMentions = mention_team_players(channel_id)
-        await interaction.channel.send("Next: " + nextMentions)
+        await interaction.channel.send("Next Pick: " + nextMentions)
         
         # Start Timer at the end of each action. 
         # Only activate timer if the draft is not paused when skipping
@@ -377,10 +377,11 @@ async def draft(interaction: Interaction, pokemon: str):
         embed = Embed(title = f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
-        await interaction.channel.send("Next" + mentions)
+        await interaction.channel.send("Next Pick" + mentions)
     except Exception as e:
         await interaction.followup.send(f"{teamName} (p. {team}) drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         await interaction.channel.send("Next Pick: " + mentions)
+
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     # No Timers Start on the First Round
@@ -451,8 +452,8 @@ async def auto_pick(interaction: Interaction):
         return 
 
     # In case the team has no players or has not been initialized
-    autoPlayers = ChannelServer.channelData[channel_id]["Rosters"].get(team, [])
-    mentions = " ".join(f"<@{user_id}>" for user_id in autoPlayers)
+    mentions = mention_team_players(channel_id)
+
     
     channel["Turn"]+=1
     ChannelServer.saveJson()
@@ -462,8 +463,12 @@ async def auto_pick(interaction: Interaction):
         embed = Embed(title = f"Team {team} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.channel.send("", embed=embed)
+        await interaction.channel.send("Next Pick: " + mentions)
+
     except Exception as e:
         await interaction.channel.send(f"You drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
+        await interaction.channel.send("Next Pick: " + mentions)
+
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
     # No Timers Start on the First Round

@@ -235,46 +235,58 @@ async def addSkipped(  interaction: Interaction, team: str,
 
     await interaction.response.send_message(f"added Teams: {', '.join(toBeSkipped)} to skipped list", ephemeral=True)
 
-@app_commands.command(name="players", description="See all the teams and what players are on each team")
-@app_commands.checks.cooldown(1, 1, key=lambda i: (i.channel_id))
-@app_commands.guilds()
-async def getPlayers(interaction: Interaction):
+@app_commands.autocomplete(team=lambda interaction, current: get_skipped_teams(interaction, current))
+async def get_skipped_teams(interaction: Interaction, current: str):
     channel_id = str(interaction.channel_id)
-    channel_name = str(interaction.channel)
+    if channel_id not in channelData:
+        return []
+    
+    skipped = channelData[channel_id]["Skipped"]
+    # Return only matching teams if user starts typing
+    return [
+        app_commands.Choice(name = team, value=team)
+        for team in skipped
+    ]
+
+# This is for fixing/matching the skipped teams/turn in case of a manual update/change.
+@app_commands.command(name="skipped_teams_remove", description="(mod) removes a team from the skipped list. This is for the purposes of manual roster changes")
+@app_commands.autocomplete(team=get_skipped_teams, team2=get_skipped_teams, team3=get_skipped_teams, team4=get_skipped_teams)
+@app_commands.guilds()
+async def removeSkipped(  interaction: Interaction, team: str, 
+                            team2: str = None,
+                            team3: str = None,
+                            team4: str = None,
+                          ):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
+    channel_id = str(interaction.channel_id)
 
     if channel_id not in channelData:
-        await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
+        await interaction.response.send_message("No Sheet Associated with channel.", ephemeral=True)
         return
-    
-    rosters = channelData[channel_id].get("Rosters", {})
-    names = channelData[channel_id].get("TeamNames", {})
 
-    if not rosters:
-        await interaction.response.send_message("No teams found.", ephemeral=True)
-        return
-    
-    embed = Embed(
-        title=f"Teams for #{channel_name}",
-        color= Color.blue()
-    )
+    noLongerSkipped = [skip for skip in [team, team2, team3, team4] if skip]
 
-    for roster, ids in rosters.items():
+    skipped = channelData[channel_id]["Skipped"]
+    removed = []
+    not_found = []
 
-        members = []
-        for member_id in ids:
-            member = await interaction.guild.fetch_member(int(member_id))
-            members.append(member)
-
-        display_names = [member.display_name for member in members if member]
-        
-        teamName = names.get(roster, f"Team {roster}: No Name")
-
-        if display_names:
-            embed.add_field(name=f"{teamName}", value=", ".join(display_names), inline=False)
+    for t in noLongerSkipped:
+        if t in skipped:
+            skipped.remove(t)
+            removed.append(t)
         else:
-            embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
+            not_found.append(t)
 
-    await interaction.response.send_message(embed=embed)
+    channelData[channel_id]["Turn"] -= len(removed)
+
+    saveJson()
+
+    msg = f"Removed {', '.join(removed)} from Skipped list" if removed else "" + f"Could not find: {', '.join(removed)}" if not_found else ""
+
+    await interaction.response.send_message(msg , ephemeral=True)
 
 # These are the active skip timers in the Draft Commands.
 timers = {}
@@ -422,8 +434,10 @@ async def getspreadsheet(interaction: Interaction):
 
 # endregion
 
+# region: Client Information Commands
+
 @app_commands.command(name="turn_info", description= "Shows current turn, draft timer, and skipped players")
-@app_commands.checks.cooldown(1, 60, key=lambda i: (i.channel_id))
+@app_commands.checks.cooldown(1, 30, key=lambda i: (i.channel_id))
 @app_commands.guilds() 
 async def turn_info(interaction: Interaction):
     channel_id = str(interaction.channel_id)
@@ -477,3 +491,47 @@ async def turn_info(interaction: Interaction):
     embed.add_field(name="Skipped Players (they may make up their turn whenever)", value=skipped_text, inline=False)
 
     await interaction.response.send_message(embed=embed)
+
+
+@app_commands.command(name="players", description="See all the teams and what players are on each team")
+@app_commands.checks.cooldown(1, 30, key=lambda i: (i.channel_id))
+@app_commands.guilds()
+async def getPlayers(interaction: Interaction):
+    channel_id = str(interaction.channel_id)
+    channel_name = str(interaction.channel)
+
+    if channel_id not in channelData:
+        await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
+        return
+    
+    rosters = channelData[channel_id].get("Rosters", {})
+    names = channelData[channel_id].get("TeamNames", {})
+
+    if not rosters:
+        await interaction.response.send_message("No teams found.", ephemeral=True)
+        return
+    
+    embed = Embed(
+        title=f"Teams for #{channel_name}",
+        color= Color.blue()
+    )
+
+    for roster, ids in rosters.items():
+
+        members = []
+        for member_id in ids:
+            member = await interaction.guild.fetch_member(int(member_id))
+            members.append(member)
+
+        display_names = [member.display_name for member in members if member]
+        
+        teamName = names.get(roster, f"Team {roster}: No Name")
+
+        if display_names:
+            embed.add_field(name=f"{teamName}", value=", ".join(display_names), inline=False)
+        else:
+            embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
+
+    await interaction.response.send_message(embed=embed)
+
+# endregion

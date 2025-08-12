@@ -92,8 +92,9 @@ async def on_ready():
         # Related to saving and storing player and sheet information in the roster.
         client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.addSkipped,       guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.addSkipped,       guild=guild) # Has Manage Message Perm
+        client.tree.add_command(ChannelServer.removeSkipped,    guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.getPlayers,       guild=guild) # PLAYER SIDE
         client.tree.add_command(ChannelServer.draft_control,    guild=guild) # Has Manage Message Perm
         client.tree.add_command(ChannelServer.turn_info,        guild=guild) # PLAYER SIDE
