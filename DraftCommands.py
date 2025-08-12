@@ -388,19 +388,16 @@ async def draft(interaction: Interaction, pokemon: str):
         embed = Embed(title = f"{teamName} drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.followup.send("", embed=embed)
-        if skipped:
-            return
-        if round < 8:
-            await interaction.channel.send("Next Pick: " + nextMentions)
     except Exception as e:
         await interaction.followup.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
-        if skipped:
-            return
-        if round < 8:
-            await interaction.channel.send("Next Pick: " + nextMentions)
 
         print(f"Error drafting: {e}")
     # Start Timer at the end of each action
+    if skipped:
+        return
+    if round < 8:
+        await interaction.channel.send("Next Pick: " + nextMentions)
+
     # No Timers Start on the First Round
     if round > 0 and round < 8:
         await start_pick_timer(interaction)
@@ -484,16 +481,15 @@ async def auto_pick(interaction: Interaction):
         embed = Embed(title = f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
         embed.set_image(url=image_url)
         await interaction.channel.send("", embed=embed)
-        if round < 8:
-            await interaction.channel.send("Next Pick: " + nextMentions)
 
     except Exception as e:
         await interaction.channel.send(f"`{teamName}` drafted {pokemon} for Round {round +1}. You have {pointsLeft} points left!")
-        if round < 8:
-            await interaction.channel.send("Next Pick: " + nextMentions)
-
         print(f"Error drafting: {e}")
+    
     # Start Timer at the end of each action
+    if round < 8:
+        await interaction.channel.send("Next Pick: " + nextMentions)
+
     # No Timers Start on the First Round
     if round > 0 and round < 8:
         await start_pick_timer(interaction)
