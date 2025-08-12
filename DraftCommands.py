@@ -406,7 +406,7 @@ async def auto_pick(interaction: Interaction):
     (round, team) = ChannelServer.getTurn(channel_id)
 
     picks = pickList["Rosters"].get(str(team), None)
-    teamName = ChannelServer.channelData["TeamNames"].get(str(team), "No Name")
+    teamName = channel["TeamNames"].get(str(team), "No Name")
 
     # If there are no picks, we will autoskip them
     if not picks:
