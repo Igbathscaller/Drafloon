@@ -1,7 +1,7 @@
 import json
 import time
 
-from discord import Interaction,Member,Embed,Color
+from discord import Interaction,Member,Embed,Color,NotFound
 from discord import app_commands
 from re import search
 from collections import Counter
@@ -518,24 +518,32 @@ async def getPlayers(interaction: Interaction):
     
     embed = Embed(
         title=f"Teams for #{channel_name}",
-        color= Color.blue()
+        color=Color.blue()
     )
 
     for roster, ids in rosters.items():
-
         members = []
         for member_id in ids:
-            member = await interaction.guild.fetch_member(int(member_id))
-            members.append(member)
+            # Try cache first
+            member = interaction.guild.get_member(int(member_id))
 
-        display_names = [member.display_name for member in members if member]
-        
+            # If not cached, fetch from API
+            if member is None:
+                try:
+                    member = await interaction.guild.fetch_member(int(member_id))
+                except NotFound:
+                    member = None
+
+            if member:
+                members.append(member)
+
+        display_names = [m.display_name for m in members]
         teamName = names.get(roster, f"Team {roster}: No Name")
 
         if display_names:
-            embed.add_field(name=f"{teamName}", value=", ".join(display_names), inline=False)
+            embed.add_field(name=teamName, value=", ".join(display_names), inline=False)
         else:
-            embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
+            embed.add_field(name=teamName, value="It's a ghost town here", inline=False)
 
     await interaction.followup.send(embed=embed)
 
