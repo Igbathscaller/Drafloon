@@ -494,7 +494,6 @@ async def turn_info(interaction: Interaction):
 
 
 @app_commands.command(name="players", description="See all the teams and what players are on each team")
-@app_commands.checks.cooldown(1, 30, key=lambda i: (i.channel_id))
 @app_commands.guilds()
 async def getPlayers(interaction: Interaction):
     channel_id = str(interaction.channel_id)
