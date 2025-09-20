@@ -496,6 +496,10 @@ async def turn_info(interaction: Interaction):
 @app_commands.command(name="players", description="See all the teams and what players are on each team")
 @app_commands.guilds()
 async def getPlayers(interaction: Interaction):
+    if not interaction.user.guild_permissions.manage_messages:
+        await interaction.response.send_message("You don't have permission to use this command.", ephemeral=True)
+        return
+
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
