@@ -499,15 +499,17 @@ async def getPlayers(interaction: Interaction):
     channel_id = str(interaction.channel_id)
     channel_name = str(interaction.channel)
 
+    await interaction.response.defer(thinking=True)
+
     if channel_id not in channelData:
-        await interaction.response.send_message(f"#`{channel_name}` has no linked spreadsheet")
+        await interaction.followup.send_message(f"#`{channel_name}` has no linked spreadsheet")
         return
     
     rosters = channelData[channel_id].get("Rosters", {})
     names = channelData[channel_id].get("TeamNames", {})
 
     if not rosters:
-        await interaction.response.send_message("No teams found.", ephemeral=True)
+        await interaction.followup.send_message("No teams found.", ephemeral=True)
         return
     
     embed = Embed(
@@ -531,6 +533,6 @@ async def getPlayers(interaction: Interaction):
         else:
             embed.add_field(name=f"{teamName}", value="It's a ghost town here", inline=False)
 
-    await interaction.response.send_message(embed=embed)
+    await interaction.followup.send_message(embed=embed)
 
 # endregion
