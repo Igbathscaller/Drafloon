@@ -427,7 +427,7 @@ async def auto_pick(interaction: Interaction):
     # If there are no picks, we will autoskip them
     if not picks:
         await interaction.channel.send(f"`{teamName}` left no picks/ran out of picks")
-        await start_skip_timer(interaction)
+        # await start_skip_timer(interaction)
         return
     
     # Get the Pokemon and start the draft process
@@ -466,7 +466,7 @@ async def auto_pick(interaction: Interaction):
 
     if not pokemon:
         await interaction.channel.send(f"None of `{teamName}`'s picks left were draftable")
-        await start_skip_timer(interaction)
+        # await start_skip_timer(interaction)
         return 
 
     # In case the team has no players or has not been initialized
