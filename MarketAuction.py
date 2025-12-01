@@ -323,11 +323,19 @@ async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
         return
     
     name = players[slot]["name"]
+    budget = players[slot]["budget"]
 
     # Check Valid Bid
     if amount <= auction_items[pokemon]["bid"]:
         await interaction.response.send_message(
             f"Your bid must exceed the current bid ({auction_items[pokemon]['bid']}).",
+            ephemeral=True
+        )
+        return
+    
+    if amount > budget:
+        await interaction.response.send_message(
+            f"Your remaining budget is only {budget}.",
             ephemeral=True
         )
         return
