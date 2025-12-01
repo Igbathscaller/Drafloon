@@ -10,6 +10,7 @@ import DraftCommands as Draft
 import GoogleInteraction as ggSheet
 import LeftPicks as Picks
 import Scheduling
+import MarketAuction
 import Pickems
 
 
@@ -121,6 +122,12 @@ async def on_ready():
         client.tree.add_command(Scheduling.update_schedule,     guild=guild) # Has Manage Channel Perms
         client.tree.add_command(Scheduling.schedulingChannels,  guild=guild) # Has Manage Channel Perms
         client.tree.add_command(Scheduling.deleteChannels,      guild=guild) # Has Manage Channel Perms
+
+        # Market Commands
+        client.tree.add_command(MarketAuction.setup,        guild=guild) # 
+        client.tree.add_command(MarketAuction.clear,        guild=guild) # 
+        client.tree.add_command(MarketAuction.setplayer,    guild=guild) # 
+        client.tree.add_command(MarketAuction.bid,          guild=guild) # 
 
         # Pickem Command
         client.tree.add_command(Pickems.pickem, guild=guild) # Has Manage Message Perm

@@ -140,7 +140,7 @@ async def start_skip_timer(interaction: Interaction):
     async def timer():
         try:
             await asyncio.sleep(skip_time)
-            await auto_skip(interaction)
+            # await auto_skip(interaction)
         except asyncio.CancelledError:
             # print("Skip Timer cancelled")
             pass
