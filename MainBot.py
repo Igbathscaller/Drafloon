@@ -128,6 +128,7 @@ async def on_ready():
         client.tree.add_command(MarketAuction.clear,        guild=guild) # 
         client.tree.add_command(MarketAuction.setplayer,    guild=guild) # 
         client.tree.add_command(MarketAuction.bid,          guild=guild) # 
+        MarketAuction.start_auction_watcher(client)
 
         # Pickem Command
         client.tree.add_command(Pickems.pickem, guild=guild) # Has Manage Message Perm
