@@ -1,1 +1,33 @@
-{}
+{
+    "pokemon": {
+        "Garchomp-Mega-Z": {
+            "bid": 60,
+            "bidder": "Igbathscaller",
+            "bidder_id": "453301824355827725",
+            "initial": 1768030842,
+            "endtime": 1768031082
+        }
+    },
+    "players": {
+        "453301824355827725": {
+            "name": "Igbathscaller",
+            "budget": 1160,
+            "mons": {
+                "Dragapult": 80,
+                "Spectrier": 70,
+                "Iron Valiant": 80,
+                "Solgaleo": 50
+            },
+            "number": 5
+        }
+    },
+    "msg_id": 1459434503893160082,
+    "info_channel_id": "1393369260620906506",
+    "bidding_channel_id": "1459434503427719291",
+    "secured_mons": [
+        "Dragapult",
+        "Spectrier",
+        "Iron Valiant",
+        "Solgaleo"
+    ]
+}
