@@ -1,33 +1,1019 @@
 {
     "pokemon": {
+        "Dragonite": {
+            "bid": 120,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768064396,
+            "endtime": 1768274971
+        },
+        "Meowscarada": {
+            "bid": 155,
+            "bidder": "ETOCUD",
+            "bidder_id": "307877133705805825",
+            "initial": 1768064396,
+            "endtime": 1768238202
+        },
         "Garchomp-Mega-Z": {
-            "bid": 60,
+            "bid": 225,
+            "bidder": "Flamingack",
+            "bidder_id": "373308967377698826",
+            "initial": 1768064396,
+            "endtime": 1768254070
+        },
+        "Latios": {
+            "bid": 130,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768064396,
+            "endtime": 1768252105
+        },
+        "Terapagos-Terastal": {
+            "bid": 250,
+            "bidder": "Migraine",
+            "bidder_id": "520959169633714186",
+            "initial": 1768064396,
+            "endtime": 1768242170
+        },
+        "Great Tusk": {
+            "bid": 200,
+            "bidder": "Graydrag",
+            "bidder_id": "325621847515332608",
+            "initial": 1768064396,
+            "endtime": 1768263892
+        },
+        "Tapu Koko": {
+            "bid": 230,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768064396,
+            "endtime": 1768279347
+        },
+        "Gholdengo": {
+            "bid": 230,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768064396,
+            "endtime": 1768275430
+        },
+        "Kingambit": {
+            "bid": 80,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768064396,
+            "endtime": 1768274984
+        },
+        "Excadrill-Mega": {
+            "bid": 130,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768064396,
+            "endtime": 1768239135
+        },
+        "Greninja": {
+            "bid": 130,
+            "bidder": "ETOCUD",
+            "bidder_id": "307877133705805825",
+            "initial": 1768064396,
+            "endtime": 1768278773
+        },
+        "Cinderace": {
+            "bid": 110,
+            "bidder": "Souvenir Man",
+            "bidder_id": "406185943280910336",
+            "initial": 1768064396,
+            "endtime": 1768254040
+        },
+        "Rotom-Wash": {
+            "bid": 205,
+            "bidder": "Souvenir Man",
+            "bidder_id": "406185943280910336",
+            "initial": 1768064396,
+            "endtime": 1768244735
+        },
+        "Skarmory-Mega": {
+            "bid": 110,
+            "bidder": "Souvenir Man",
+            "bidder_id": "406185943280910336",
+            "initial": 1768064396,
+            "endtime": 1768245435
+        },
+        "Landorus-Therian": {
+            "bid": 160,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768064396,
+            "endtime": 1768252988
+        },
+        "Absol-Mega-Z": {
+            "bid": 165,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768064396,
+            "endtime": 1768257421
+        },
+        "Corviknight": {
+            "bid": 120,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768064396,
+            "endtime": 1768257433
+        },
+        "Landorus": {
+            "bid": 95,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768075787,
+            "endtime": 1768281359
+        },
+        "Iron Bundle": {
+            "bid": 185,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768075799,
+            "endtime": 1768255752
+        },
+        "Chi-Yu": {
+            "bid": 125,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768079785,
+            "endtime": 1768276467
+        },
+        "Garchomp": {
+            "bid": 150,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768080152,
+            "endtime": 1768254590
+        },
+        "Tornadus-Therian": {
+            "bid": 135,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768080444,
+            "endtime": 1768268484
+        },
+        "Kartana": {
+            "bid": 85,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768081479,
+            "endtime": 1768249827
+        },
+        "Primarina": {
+            "bid": 85,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768082162,
+            "endtime": 1768247693
+        },
+        "Baxcalibur-Mega": {
+            "bid": 85,
             "bidder": "Igbathscaller",
             "bidder_id": "453301824355827725",
-            "initial": 1768030842,
-            "endtime": 1768031082
+            "initial": 1768082645,
+            "endtime": 1768283153
+        },
+        "Annihilape": {
+            "bid": 215,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768082709,
+            "endtime": 1768242512
+        },
+        "Dragonite-Mega": {
+            "bid": 65,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768084785,
+            "endtime": 1768277803
+        },
+        "Kyurem": {
+            "bid": 130,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768088123,
+            "endtime": 1768281449
+        },
+        "Clodsire": {
+            "bid": 70,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768088380,
+            "endtime": 1768281559
+        },
+        "Gouging Fire": {
+            "bid": 85,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768088422,
+            "endtime": 1768251463
+        },
+        "Sneasler": {
+            "bid": 95,
+            "bidder": "Nick-Bibleman",
+            "bidder_id": "628372512396279848",
+            "initial": 1768088478,
+            "endtime": 1768280970
+        },
+        "Tapu Lele": {
+            "bid": 200,
+            "bidder": "Migraine",
+            "bidder_id": "520959169633714186",
+            "initial": 1768088488,
+            "endtime": 1768255755
+        },
+        "Clefable": {
+            "bid": 115,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768088628,
+            "endtime": 1768237612
+        },
+        "Thundurus-Therian": {
+            "bid": 140,
+            "bidder": "Graydrag",
+            "bidder_id": "325621847515332608",
+            "initial": 1768089069,
+            "endtime": 1768238514
+        },
+        "Walking Wake": {
+            "bid": 120,
+            "bidder": "Graydrag",
+            "bidder_id": "325621847515332608",
+            "initial": 1768089764,
+            "endtime": 1768279319
+        },
+        "Greninja-Mega": {
+            "bid": 110,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768092646,
+            "endtime": 1768285018
+        },
+        "Deoxys-Speed": {
+            "bid": 80,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768093582,
+            "endtime": 1768252680
+        },
+        "Zeraora": {
+            "bid": 60,
+            "bidder": "Glassoderp",
+            "bidder_id": "199993616041639936",
+            "initial": 1768093619,
+            "endtime": 1768252886
+        },
+        "Ursaluna-Bloodmoon": {
+            "bid": 90,
+            "bidder": "Juicemonster",
+            "bidder_id": "371299263164055554",
+            "initial": 1768096762,
+            "endtime": 1768281228
+        },
+        "Urshifu": {
+            "bid": 85,
+            "bidder": "Flamingack",
+            "bidder_id": "373308967377698826",
+            "initial": 1768099100,
+            "endtime": 1768283454
+        },
+        "Urshifu-Rapid-Strike": {
+            "bid": 75,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768099108,
+            "endtime": 1768271331
+        },
+        "Zapdos": {
+            "bid": 205,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768099304,
+            "endtime": 1768258280
+        },
+        "Darkrai": {
+            "bid": 180,
+            "bidder": "Juicemonster",
+            "bidder_id": "371299263164055554",
+            "initial": 1768100839,
+            "endtime": 1768285352
+        },
+        "Raging Bolt": {
+            "bid": 80,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768101261,
+            "endtime": 1768262280
+        },
+        "Iron Hands": {
+            "bid": 80,
+            "bidder": "Igbathscaller",
+            "bidder_id": "453301824355827725",
+            "initial": 1768102109,
+            "endtime": 1768246847
+        },
+        "Slowking": {
+            "bid": 95,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768102416,
+            "endtime": 1768251668
+        },
+        "Blaziken": {
+            "bid": 75,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768102447,
+            "endtime": 1768238737
+        },
+        "Heatran-Mega": {
+            "bid": 95,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768102547,
+            "endtime": 1768241097
+        },
+        "Zygarde": {
+            "bid": 235,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768104370,
+            "endtime": 1768267654
+        },
+        "Darkrai-Mega": {
+            "bid": 100,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768110646,
+            "endtime": 1768289853
+        },
+        "Ferrothorn": {
+            "bid": 85,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768111386,
+            "endtime": 1768255707
+        },
+        "Latias": {
+            "bid": 135,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768111733,
+            "endtime": 1768264529
+        },
+        "Delphox-Mega": {
+            "bid": 160,
+            "bidder": "Migraine",
+            "bidder_id": "520959169633714186",
+            "initial": 1768113067,
+            "endtime": 1768259464
+        },
+        "Ogerpon-Hearthflame": {
+            "bid": 75,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768114155,
+            "endtime": 1768287849
+        },
+        "Palafin": {
+            "bid": 100,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768114949,
+            "endtime": 1768290369
+        },
+        "Toxapex": {
+            "bid": 85,
+            "bidder": "Igbathscaller",
+            "bidder_id": "453301824355827725",
+            "initial": 1768115342,
+            "endtime": 1768250840
+        },
+        "Hoopa-Unbound": {
+            "bid": 60,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768115740,
+            "endtime": 1768239582
+        },
+        "Slowbro": {
+            "bid": 65,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768147078,
+            "endtime": 1768278109
+        },
+        "Tapu Bulu": {
+            "bid": 50,
+            "bidder": "Juicemonster",
+            "bidder_id": "371299263164055554",
+            "initial": 1768163582,
+            "endtime": 1768249982
+        },
+        "Aegislash": {
+            "bid": 80,
+            "bidder": "Juicemonster",
+            "bidder_id": "371299263164055554",
+            "initial": 1768163695,
+            "endtime": 1768297795
+        },
+        "Starmie": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164517,
+            "endtime": 1768250917
+        },
+        "Starmie-Mega": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164650,
+            "endtime": 1768251050
+        },
+        "Metagross": {
+            "bid": 150,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164701,
+            "endtime": 1768251101
+        },
+        "Porygon-Z": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164731,
+            "endtime": 1768251131
+        },
+        "Crobat": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164753,
+            "endtime": 1768251153
+        },
+        "Sableye": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164919,
+            "endtime": 1768251319
+        },
+        "Flygon": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164934,
+            "endtime": 1768251334
+        },
+        "Indeedee": {
+            "bid": 60,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164954,
+            "endtime": 1768252623
+        },
+        "Gengar": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768164992,
+            "endtime": 1768251392
+        },
+        "Alakazam": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165011,
+            "endtime": 1768251411
+        },
+        "Victini": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165057,
+            "endtime": 1768251457
+        },
+        "Politoed": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165131,
+            "endtime": 1768251531
+        },
+        "Torkoal": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165151,
+            "endtime": 1768251551
+        },
+        "Sceptile": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165186,
+            "endtime": 1768251586
+        },
+        "Xurkitree": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768165284,
+            "endtime": 1768251684
+        },
+        "Raichu-Mega-Y": {
+            "bid": 100,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768165306,
+            "endtime": 1768251706
+        },
+        "Keldeo": {
+            "bid": 100,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768165582,
+            "endtime": 1768251982
+        },
+        "Scizor": {
+            "bid": 65,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768165712,
+            "endtime": 1768278091
+        },
+        "Uxie": {
+            "bid": 50,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768165793,
+            "endtime": 1768252193
+        },
+        "Cresselia": {
+            "bid": 55,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768167603,
+            "endtime": 1768279067
+        },
+        "Kommo-o": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768167640,
+            "endtime": 1768254040
+        },
+        "Pincurchin": {
+            "bid": 50,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768168383,
+            "endtime": 1768254783
+        },
+        "Ogerpon-Cornerstone": {
+            "bid": 50,
+            "bidder": "Flamingack",
+            "bidder_id": "373308967377698826",
+            "initial": 1768169902,
+            "endtime": 1768256302
+        },
+        "Weavile": {
+            "bid": 50,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768170206,
+            "endtime": 1768256606
+        },
+        "Ursaluna": {
+            "bid": 60,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768170443,
+            "endtime": 1768305101
+        },
+        "Hatterene": {
+            "bid": 75,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768170655,
+            "endtime": 1768302724
+        },
+        "Quaquaval": {
+            "bid": 50,
+            "bidder": "zach",
+            "bidder_id": "1257862365836214436",
+            "initial": 1768170693,
+            "endtime": 1768257093
+        },
+        "Clefable-Mega": {
+            "bid": 50,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768172079,
+            "endtime": 1768258479
+        },
+        "Registeel": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768172904,
+            "endtime": 1768259304
+        },
+        "Regieleki": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768172911,
+            "endtime": 1768259311
+        },
+        "Shaymin": {
+            "bid": 50,
+            "bidder": "Namdotcom",
+            "bidder_id": "360940895731843074",
+            "initial": 1768172925,
+            "endtime": 1768259325
+        },
+        "Regidrago": {
+            "bid": 50,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768178281,
+            "endtime": 1768264681
+        },
+        "Terrakion": {
+            "bid": 50,
+            "bidder": "pillowlake",
+            "bidder_id": "774177431547412482",
+            "initial": 1768178302,
+            "endtime": 1768264702
+        },
+        "Muk-Alola": {
+            "bid": 50,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768182274,
+            "endtime": 1768268674
+        },
+        "Suicune": {
+            "bid": 50,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768182288,
+            "endtime": 1768268688
+        },
+        "Buzzwole": {
+            "bid": 50,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768182356,
+            "endtime": 1768268756
+        },
+        "Tinkaton": {
+            "bid": 75,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768182378,
+            "endtime": 1768284326
+        },
+        "Zoroark-Hisui": {
+            "bid": 50,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768182470,
+            "endtime": 1768268870
+        },
+        "Enamorus": {
+            "bid": 110,
+            "bidder": "Graydrag",
+            "bidder_id": "325621847515332608",
+            "initial": 1768190013,
+            "endtime": 1768296804
+        },
+        "Barbaracle": {
+            "bid": 50,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768195284,
+            "endtime": 1768281684
+        },
+        "Barbaracle-Mega": {
+            "bid": 145,
+            "bidder": "Ven0m",
+            "bidder_id": "483350834231640064",
+            "initial": 1768195295,
+            "endtime": 1768282535
+        },
+        "Diancie": {
+            "bid": 50,
+            "bidder": "Igbathscaller",
+            "bidder_id": "453301824355827725",
+            "initial": 1768195802,
+            "endtime": 1768282202
+        },
+        "Chesnaught-Mega": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768198835,
+            "endtime": 1768285235
+        },
+        "Empoleon": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768198859,
+            "endtime": 1768285259
+        },
+        "Heatran": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768200608,
+            "endtime": 1768287008
+        },
+        "Iron Boulder": {
+            "bid": 50,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768200646,
+            "endtime": 1768287046
+        },
+        "Azumarill": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768200713,
+            "endtime": 1768287113
+        },
+        "Swampert": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768200746,
+            "endtime": 1768287146
+        },
+        "Okidogi": {
+            "bid": 55,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768200897,
+            "endtime": 1768287850
+        },
+        "Dondozo": {
+            "bid": 65,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768200979,
+            "endtime": 1768287379
+        },
+        "Jirachi": {
+            "bid": 50,
+            "bidder": "Chico",
+            "bidder_id": "167868489351168000",
+            "initial": 1768201075,
+            "endtime": 1768287475
+        },
+        "Ninetales-Alola": {
+            "bid": 50,
+            "bidder": "Armenius <3",
+            "bidder_id": "242142442483220481",
+            "initial": 1768203099,
+            "endtime": 1768289499
+        },
+        "Ninetales": {
+            "bid": 50,
+            "bidder": "Graydrag",
+            "bidder_id": "325621847515332608",
+            "initial": 1768217256,
+            "endtime": 1768303656
+        },
+        "Iron Moth": {
+            "bid": 50,
+            "bidder": "ETOCUD",
+            "bidder_id": "307877133705805825",
+            "initial": 1768228314,
+            "endtime": 1768314714
+        },
+        "Weezing-Galar": {
+            "bid": 50,
+            "bidder": "seneorchang",
+            "bidder_id": "587966526326308874",
+            "initial": 1768230359,
+            "endtime": 1768316759
         }
     },
     "players": {
-        "453301824355827725": {
-            "name": "Igbathscaller",
-            "budget": 1160,
+        "312263794300551168": {
+            "name": "Igbath Extra Wallet",
+            "budget": 1500,
+            "mons": {},
+            "number": 0
+        },
+        "167868489351168000": {
+            "name": "Chico",
+            "budget": 420,
+            "mons": {},
+            "number": 13
+        },
+        "325621847515332608": {
+            "name": "Graydrag",
+            "budget": 40,
             "mons": {
-                "Dragapult": 80,
-                "Spectrier": 70,
-                "Iron Valiant": 80,
-                "Solgaleo": 50
+                "Scolipede-Mega": 50,
+                "Wo-Chien": 50,
+                "Slowking-Galar": 275,
+                "Roaring Moon": 190,
+                "Iron Crown": 135,
+                "Sinistcha": 140
+            },
+            "number": 11
+        },
+        "587966526326308874": {
+            "name": "seneorchang",
+            "budget": 5,
+            "mons": {
+                "Blacephalon": 100,
+                "Chien-Pao": 275
+            },
+            "number": 14
+        },
+        "483350834231640064": {
+            "name": "Ven0m",
+            "budget": 470,
+            "mons": {
+                "Gliscor": 280,
+                "Moltres": 140
+            },
+            "number": 9
+        },
+        "371299263164055554": {
+            "name": "Juicemonster",
+            "budget": 1050,
+            "mons": {
+                "Smeargle": 50
             },
             "number": 5
+        },
+        "307877133705805825": {
+            "name": "ETOCUD",
+            "budget": 745,
+            "mons": {
+                "Iron Valiant": 250,
+                "Glimmora": 100,
+                "Mew": 70
+            },
+            "number": 6
+        },
+        "520959169633714186": {
+            "name": "Migraine",
+            "budget": 365,
+            "mons": {
+                "Ogerpon-Wellspring": 200,
+                "Samurott-Hisui": 100,
+                "Slither Wing": 50,
+                "Iron Treads": 175
+            },
+            "number": 7
+        },
+        "774177431547412482": {
+            "name": "pillowlake",
+            "budget": 360,
+            "mons": {
+                "Ditto": 50,
+                "Shedinja": 50
+            },
+            "number": 12
+        },
+        "406185943280910336": {
+            "name": "Souvenir Man",
+            "budget": 480,
+            "mons": {
+                "Ting-Lu": 255,
+                "Dragapult": 275,
+                "Tangrowth": 65
+            },
+            "number": 6
+        },
+        "711947663008071705": {
+            "name": "Igbath Hidden Safe",
+            "budget": 1500,
+            "mons": {},
+            "number": 0
+        },
+        "373308967377698826": {
+            "name": "Flamingack",
+            "budget": 155,
+            "mons": {
+                "Manaphy": 100,
+                "Spectrier": 255,
+                "Solgaleo": 405,
+                "Tapu Fini": 225
+            },
+            "number": 7
+        },
+        "199993616041639936": {
+            "name": "Glassoderp",
+            "budget": 815,
+            "mons": {
+                "Pecharunt": 185
+            },
+            "number": 7
+        },
+        "1257862365836214436": {
+            "name": "zach",
+            "budget": 245,
+            "mons": {
+                "Zeraora-Mega": 360,
+                "Alomomola": 155
+            },
+            "number": 10
+        },
+        "242142442483220481": {
+            "name": "Armenius <3",
+            "budget": 600,
+            "mons": {
+                "Necrozma": 150
+            },
+            "number": 11
+        },
+        "628372512396279848": {
+            "name": "Nick-Bibleman",
+            "budget": 165,
+            "mons": {
+                "Tyranitar": 255,
+                "Rillaboom": 140,
+                "Melmetal": 205
+            },
+            "number": 9
+        },
+        "360940895731843074": {
+            "name": "Namdotcom",
+            "budget": 440,
+            "mons": {},
+            "number": 19
+        },
+        "453301824355827725": {
+            "name": "Igbathscaller",
+            "budget": 450,
+            "mons": {
+                "Lugia": 235,
+                "Celesteela": 145,
+                "Zamazenta": 320,
+                "Skeledirge": 50
+            },
+            "number": 8
         }
     },
-    "msg_id": 1459434503893160082,
-    "info_channel_id": "1393369260620906506",
-    "bidding_channel_id": "1459434503427719291",
+    "msg_id": [
+        1459458643467436066,
+        1459771276817338484,
+        1459771402776350720
+    ],
+    "info_channel_id": "1459269459763003535",
+    "bidding_channel_id": "1459458642532237333",
     "secured_mons": [
-        "Dragapult",
-        "Spectrier",
+        "Scolipede-Mega",
+        "Wo-Chien",
+        "Ting-Lu",
+        "Tyranitar",
+        "Smeargle",
         "Iron Valiant",
-        "Solgaleo"
+        "Dragapult",
+        "Lucario-Mega-Z",
+        "Slowking-Galar",
+        "Manaphy",
+        "Lugia",
+        "Gliscor",
+        "Ditto",
+        "Ogerpon-Wellspring",
+        "Celesteela",
+        "Spectrier",
+        "Necrozma",
+        "Samurott-Hisui",
+        "Shedinja",
+        "Slither Wing",
+        "Roaring Moon",
+        "Blacephalon",
+        "Rillaboom",
+        "Iron Crown",
+        "Melmetal",
+        "Chien-Pao",
+        "Iron Treads",
+        "Solgaleo",
+        "Tapu Fini",
+        "Glimmora",
+        "Zamazenta",
+        "Pecharunt",
+        "Zeraora-Mega",
+        "Sinistcha",
+        "Mew",
+        "Alomomola",
+        "Moltres",
+        "Skeledirge",
+        "Tangrowth"
     ]
 }

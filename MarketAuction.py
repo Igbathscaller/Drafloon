@@ -46,7 +46,7 @@ with open("auctionMons.json") as f:
 def auction_msg():
     
     pokemonList = auction["pokemon"]
-    sorted_pokemon = [k for k, v in sorted(pokemonList.items(), key=lambda item: item[1]["bid"], reverse=True)]
+    sorted_pokemon = [k for k, v in sorted(pokemonList.items(), key=lambda item: item[1]["endtime"], reverse=False)]
 
     players = auction["players"]
     
@@ -69,11 +69,11 @@ def auction_msg():
         pokemon = players[id]["mons"]
 
         lines = []
-        lines.append(f"`{"Pokémon Secured":<16}` | `{"Points":<6}`")
+        lines.append(f"`{'Pokémon Secured':<16}` | `{'Points':<6}`")
         
         for mon in pokemon:
-            lines.append(f"`{mon:<16}` | `{pokemon[mon]:<6}`")
-        lines.append(f"`{"Points Left":<16}` | **{budget}**")
+            lines.append(f"`{mon[:16]:<16}` | `{pokemon[mon]:<6}`")
+        lines.append(f"`{'Points Left':<16}` | **{budget}**")
 
         playerEmbed.add_field(
             name = username,
@@ -83,31 +83,61 @@ def auction_msg():
 
     embeds.append(playerEmbed)
     
-    auctionEmbed = discord.Embed(
-        title = "Currently Auctioned",
-        color = 2943779
-    )
+    # auctionEmbed = discord.Embed(
+    #     title = "Currently Auctioned",
+    #     color = 2943779
+    # )
     
     pokeNum = len(pokemonList)
 
-    for i in range((pokeNum-1)//15 + 1):
+    # for i in range((pokeNum-1)//15 + 1):
 
-        auctionLines = []
+    #     auctionLines = []
 
-        if i == pokeNum//15:
-            for poke in sorted_pokemon[i*15:pokeNum]:
-                auctionLines.append(f"`{poke:<15} | {pokemonList[poke]["bidder"]:<14} | {pokemonList[poke]["bid"]:<4} |` <t:{pokemonList[poke]["endtime"]}:R>")
-        else:
-            for poke in sorted_pokemon[i*15, i*15 + 15]:
-                auctionLines.append(f"`{poke:<15} | {pokemonList[poke]["bidder"]:<14} | {pokemonList[poke]["bid"]:<4} |` <t:{pokemonList[poke]["endtime"]}:R>")
+    #     if i == pokeNum//15:
+    #         for poke in sorted_pokemon[i*15:pokeNum]:
+    #             auctionLines.append(f"`{poke[:15]:<15} | {pokemonList[poke]['bidder'][:14]:<14} | {pokemonList[poke]['bid']:<4} |` <t:{pokemonList[poke]['endtime']}:R>")
+    #     else:
+    #         for poke in sorted_pokemon[i*15: i*15 + 15]:
+    #             auctionLines.append(f"`{poke[:15]:<15} | {pokemonList[poke]['bidder'][:14]:<14} | {pokemonList[poke]['bid']:<4} |` <t:{pokemonList[poke]['endtime']}:R>")
 
-        auctionEmbed.add_field(
-            name = f"`{"Pokémon":<16} | {"Highest Bidder":<15} | {"Bid":<4} |` Secure Time",
-            value = "\n".join(auctionLines),
-            inline= False
-        )
+    #     auctionEmbed.add_field(
+    #         name = f"`{'Pokémon':<15} | {'Highest Bidder':<14} | {'Bid':<4} |` Secure Time",
+    #         value = "\n".join(auctionLines),
+    #         inline= False
+    #     )
 
-    embeds.append(auctionEmbed)
+    # embeds.append(auctionEmbed)
+
+    # Collect all fields first
+    all_fields = []
+    for i in range((pokeNum - 1)//15 + 1):
+        start = i * 15
+        end = pokeNum if i == pokeNum//15 else i * 15 + 15
+        auctionLines = [
+            f"`{poke[:15]:<15} | {pokemonList[poke]['bidder'][:14]:<14} | {pokemonList[poke]['bid']:<4} |` <t:{pokemonList[poke]['endtime']}:R>"
+            for poke in sorted_pokemon[start:end]
+        ]
+        all_fields.append({
+            "name": f"`{'Pokémon':<15} | {'Highest Bidder':<14} | {'Bid':<4} |` Secure Time",
+            "value": "\n".join(auctionLines)
+        })
+    
+    # First embed: first 5 fields (or fewer if not enough)
+    first_embed = discord.Embed(title="Currently Auctioned", color=2943779)
+    for field in all_fields[:5]:
+        first_embed.add_field(name=field["name"], value=field["value"], inline=False)
+    embeds.append(first_embed)
+    
+    # Second embed: remaining fields, or empty if none
+    second_embed = discord.Embed(title="Currently Auctioned 2", color=2943779)
+    remaining_fields = all_fields[5:]
+    if remaining_fields:
+        for field in remaining_fields:
+            second_embed.add_field(name=field["name"], value=field["value"], inline=False)
+    else:
+        second_embed.description = "No additional Pokémon."
+    embeds.append(second_embed)
 
     return embeds
 
@@ -141,7 +171,7 @@ async def setup(interaction: discord.Interaction):
     
     auction["pokemon"]= {} 
     auction["players"]= {}
-    auction["msg_id"] = None
+    auction["msg_id"] = []
     auction["info_channel_id"] = channel_id
     auction["bidding_channel_id"] = None
     auction["secured_mons"] = []
@@ -213,15 +243,17 @@ async def setplayer(interaction: discord.Interaction, user: discord.User):
 
     players[player_id] = {"name": displayName, "budget": 1500, "mons": {}, "number" : 0}
 
-    msg_id = auction["msg_id"]
+    saveAuction()
+
+    msg_ids = auction["msg_id"]
+
+    all_embeds = auction_msg()
 
     # Update embed
     channel = interaction.channel
-    msg = await channel.fetch_message(msg_id)
-    
-    await msg.edit(embeds = auction_msg())
-
-    saveAuction()
+    for msg_id, embed_obj in zip(msg_ids, all_embeds):
+        msg = await channel.fetch_message(msg_id)
+        await msg.edit(embed=embed_obj)
 
     await interaction.response.send_message(
         f"{displayName} has been added.",
@@ -238,7 +270,7 @@ async def item_autocomplete(interaction: discord.Interaction, current: str):
     ][:25]
 
 @app_commands.command(name="bid")
-@app_commands.describe(pokemon="Item number", amount="Bid amount (they will be rounded down to nearest 5)")
+@app_commands.describe(pokemon="Pokemon Name", amount="Bid amount (they will be rounded down to nearest 5)")
 @app_commands.autocomplete(pokemon=item_autocomplete)
 async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
 
@@ -321,7 +353,8 @@ async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
             initial = auctionList[pokemon]["initial"]
             currentTime = int(time.time())
             elapsed = currentTime - initial
-            auctionList[pokemon]["endtime"] = int(initial + 0.75 * elapsed + 240)
+            auctionList[pokemon]["endtime"] = int(initial + 0.75 * elapsed + 86400)
+            # auctionList[pokemon]["endtime"] = int(initial + 0.75 * elapsed + 240)
 
             await interaction.response.send_message(
                 f"You bid on {pokemon} for {amount}. You have {budget - amount} points left."
@@ -344,8 +377,8 @@ async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
             "bidder": name,
             "bidder_id": bidder_id,
             "initial": currentTime,
-            # "endtime": currentTime + 86400
-            "endtime": currentTime + 240
+            "endtime": currentTime + 86400
+            # "endtime": currentTime + 240
         }
         playerInfo["budget"] = playerInfo["budget"] - amount
         playerInfo["number"] = playerInfo["number"] + 1
@@ -353,15 +386,67 @@ async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
             f"You bid on {pokemon} for {amount}. You have {budget - amount} points left."
             )
 
-
-    msg_id = auction["msg_id"]
-    channel = interaction.guild.get_channel(int(info_channel_id))
-    msg = await channel.fetch_message(msg_id)
-
-    # update info message
-    await msg.edit(embeds = auction_msg())
-
     saveAuction()
+
+
+    msg_ids = auction["msg_id"]
+
+    all_embeds = auction_msg()
+
+    # Update embed
+    channel = interaction.guild.get_channel(int(info_channel_id))
+    for msg_id, embed_obj in zip(msg_ids, all_embeds):
+        msg = await channel.fetch_message(msg_id)
+        await msg.edit(embed=embed_obj)
+
+
+@app_commands.command(name="peek")
+@app_commands.describe(pokemon="Pokemon Name")
+@app_commands.autocomplete(pokemon=item_autocomplete)
+async def peek_pokemon(interaction: discord.Interaction, pokemon: str):
+
+    pokemonInfo = auction["pokemon"].get(pokemon)
+
+    if pokemonInfo:
+        bid = pokemonInfo["bid"]
+        bidder = pokemonInfo["bidder"]
+        endtime = pokemonInfo["endtime"]
+        await interaction.response.send_message(f"{bidder} is currently bidding {bid} on {pokemon}. Secure Time: <t:{endtime}:R>")
+    else:
+        await interaction.response.send_message(f"{pokemon} is currently not being bid on")
+
+@app_commands.command(name="peek_player")
+@app_commands.describe(player = "player")
+async def peek_player(interaction: discord.Interaction, player: discord.User):
+    
+    player_id = str(player.id)
+
+    if player_id in auction["players"]:
+        pokemonList = auction["pokemon"]
+        filterPokemon = [k for k, v in sorted(pokemonList.items(),key=lambda item: item[1]["bid"],reverse = True)
+        if v["bidder_id"] == player_id]
+
+        auctionEmbed = discord.Embed(
+            title = f"{auction['players'][player_id]['name']}\'s bids",
+            color = 2943779
+        )
+    
+        auctionLines = []
+
+        for poke in filterPokemon:
+            auctionLines.append(f"`{poke[:15]:<15} | {pokemonList[poke]['bid']:<4} |` <t:{pokemonList[poke]['endtime']}:R>")
+
+        auctionEmbed.add_field(
+            name = f"`{'Pokémon':<15} | {'Bid':<4} |` Secure Time",
+            value = "\n".join(auctionLines),
+            inline= False
+        )
+
+        await interaction.response.send_message(embed = auctionEmbed, ephemeral = True)
+
+    else:
+        await interaction.response.send_message("This user is not participating", ephemeral = True)
+
 
 
 async def finalize_expired_auctions(client):
@@ -398,12 +483,15 @@ async def finalize_expired_auctions(client):
     
     if expired:
         info_channel_id = auction.get("info_channel_id")
-        msg_id = auction["msg_id"]
+        msg_ids = auction["msg_id"]
         channel = client.get_channel(int(info_channel_id))
-        msg = await channel.fetch_message(msg_id)
+        
+        all_embeds = auction_msg()  
 
         # update info message
-        await msg.edit(embeds = auction_msg())
+        for msg_id, embed_obj in zip(msg_ids, all_embeds):
+            msg = await channel.fetch_message(msg_id)
+            await msg.edit(embed=embed_obj)  # single embed per message
 
         saveAuction()
 
@@ -415,9 +503,11 @@ def start_auction_watcher(client):
 
     @tasks.loop(seconds=30)
     async def watcher_loop():
-        # your polling logic here
-        await finalize_expired_auctions(client)
-        # optionally send messages using `client`
+        # channel_id = int(auction["info_channel_id"])
+        # channel = client.get_channel(channel_id)
+        # await channel.send("hi")
+        if auction:
+            await finalize_expired_auctions(client)
 
     @watcher_loop.before_loop
     async def before_watcher():

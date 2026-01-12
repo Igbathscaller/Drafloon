@@ -98,36 +98,38 @@ async def on_ready():
         guild = discord.Object(id=Guild_Id)
     
         # Related to saving and storing player and sheet information in the roster.
-        client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.addSkipped,       guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.removeSkipped,    guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.getPlayers,       guild=guild) # PLAYER SIDE
-        client.tree.add_command(ChannelServer.draft_control,    guild=guild) # Has Manage Message Perm
-        client.tree.add_command(ChannelServer.turn_info,        guild=guild) # PLAYER SIDE
+        # client.tree.add_command(ChannelServer.setspreadsheet,   guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.setPlayerRoster,  guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.removePlayer,     guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.addSkipped,       guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.removeSkipped,    guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.getPlayers,       guild=guild) # PLAYER SIDE
+        # client.tree.add_command(ChannelServer.draft_control,    guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(ChannelServer.turn_info,        guild=guild) # PLAYER SIDE
 
         # Draft Commands
-        client.tree.add_command(Draft.draft,        guild=guild) # PLAYER SIDE
-        client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
-        client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(Draft.draft,        guild=guild) # PLAYER SIDE
+        # client.tree.add_command(Draft.skip_player,  guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(Draft.stop_timer,   guild=guild) # Has Manage Message Perm
         
         # Pick Commands
-        client.tree.add_command(Picks.leave_pick,       guild=guild) # PLAYER SIDE
-        client.tree.add_command(Picks.view_picks,       guild=guild) # PLAYER SIDE
-        client.tree.add_command(Picks.view_picks_mod,   guild=guild) # Has Manage Message Perm
+        # client.tree.add_command(Picks.leave_pick,       guild=guild) # PLAYER SIDE
+        # client.tree.add_command(Picks.view_picks,       guild=guild) # PLAYER SIDE
+        # client.tree.add_command(Picks.view_picks_mod,   guild=guild) # Has Manage Message Perm
 
         # Scheduling Commands
-        client.tree.add_command(Scheduling.save_schedule_sheet, guild=guild) # Has Manage Channel Perms
-        client.tree.add_command(Scheduling.update_schedule,     guild=guild) # Has Manage Channel Perms
-        client.tree.add_command(Scheduling.schedulingChannels,  guild=guild) # Has Manage Channel Perms
-        client.tree.add_command(Scheduling.deleteChannels,      guild=guild) # Has Manage Channel Perms
+        # client.tree.add_command(Scheduling.save_schedule_sheet, guild=guild) # Has Manage Channel Perms
+        # client.tree.add_command(Scheduling.update_schedule,     guild=guild) # Has Manage Channel Perms
+        # client.tree.add_command(Scheduling.schedulingChannels,  guild=guild) # Has Manage Channel Perms
+        # client.tree.add_command(Scheduling.deleteChannels,      guild=guild) # Has Manage Channel Perms
 
         # Market Commands
         client.tree.add_command(MarketAuction.setup,        guild=guild) # 
         client.tree.add_command(MarketAuction.clear,        guild=guild) # 
         client.tree.add_command(MarketAuction.setplayer,    guild=guild) # 
         client.tree.add_command(MarketAuction.bid,          guild=guild) # 
+        client.tree.add_command(MarketAuction.peek_pokemon, guild=guild) # 
+        client.tree.add_command(MarketAuction.peek_player,  guild=guild) # 
         MarketAuction.start_auction_watcher(client)
 
         # Pickem Command
