@@ -357,10 +357,8 @@ async def bid(interaction: discord.Interaction, pokemon: str, amount: int):
             # auctionList[pokemon]["endtime"] = int(initial + 0.75 * elapsed + 240)
 
             await interaction.response.send_message(
-                f"You bid on {pokemon} for {amount}. You have {budget - amount} points left."
-            )
-            await interaction.followup.send(
-                f"<@{oldBidder}>, you got outbid on {pokemon}"
+                f"""You bid on {pokemon} for {amount}. You have {budget - amount} points left.
+                    <@{oldBidder}>, you got outbid on {pokemon}"""
             )
 
 
@@ -412,6 +410,8 @@ async def peek_pokemon(interaction: discord.Interaction, pokemon: str):
         bidder = pokemonInfo["bidder"]
         endtime = pokemonInfo["endtime"]
         await interaction.response.send_message(f"{bidder} is currently bidding {bid} on {pokemon}. Secure Time: <t:{endtime}:R>")
+    elif pokemon in auction["secured_mons"]:
+        await interaction.response.send_message(f"{pokemon} has already been secured")
     else:
         await interaction.response.send_message(f"{pokemon} is currently not being bid on")
 
